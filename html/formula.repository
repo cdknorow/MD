@@ -1,0 +1,4 @@
+\form#0:\begin{eqnarray*} msd = sum{i,N}((r_0-r_i)^0.5) \end{eqnarray*}
+\form#1:\begin{eqnarray*} MSD(t) = \sum{i=0}^N((r_0-r_i)^{0.5}) \end{eqnarray*}
+\form#2:\begin{eqnarray*} MSD(t) = \sum_{i=0}^N((r_0-r_i)^{0.5}) \end{eqnarray*}
+\form#3:\begin{eqnarray*} MSD(t) = \sum_{i=0}^N(r(0)_{i}-r(t)_i)^{0.5} \end{eqnarray*}
