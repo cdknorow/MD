@@ -13,7 +13,7 @@ Available analysis modules
     
 :"""
 
-__all__ = ['square']
+__all__ = ['square','run_alaysis']
 
 
 

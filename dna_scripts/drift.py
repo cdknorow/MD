@@ -18,8 +18,10 @@ if __name__ == '__main__':
     #run_all()
     import MD
     print 'MD.L is '
-    print MD.L
-    MD.V = MD.M.cord_auto(['V'])
-    MD.W = MD.M.cord_auto(['W'])
-    MD.VW = MD.M.cord_auto(['V','W'])
-    drift_remove_all(MD.VW,MD.V,MD.W,MD.L)
+    M=MD.ReadCord()
+    Lx = M.box_length
+    Ly = M.box_length_y
+    Lz = M.box_length_z
+    L = np.array([Lx, Ly, Lz])
+    VW=M.cord_auto(['V','W'])
+    drift_remove_all(VW,VW,VW,L)

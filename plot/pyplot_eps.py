@@ -365,21 +365,25 @@ def plot_sf(X, Y,sf, name='K',xlen = 7, yadjust = 0, linestyle='-', marker='', x
     #    yy[i] = exp(-(r**2*xx[i]**2)/3)
     #ax1.plot(xx,yy,'--',color='green')
     x= [sf*i**0.5 for i in range(1,xlen+1)]
-    y = np.array([ 0.8,0.8,0.8,0.7,0.6,0.5,0.4,0.3,0.17])
-    for i in range(xlen):
-        print x[i]
-        print y[i]
-        plt.axvline(x=x[i],ymin=0,ymax=y[i],ls='--',color='grey')
-        plt.text(x[i],y[i]+0.15,'$\sqrt{%i}$'%(i+1),size = 7,ha='center')
+    #y = np.array([ 0.8,0.8,0.8,0.7,0.6,0.5,0.4,0.3,0.17])+0.2
+    y = [0.85 for i in range(xlen)]
+    #for i in range(xlen):
+    #    print x[i]
+    #    print y[i]
+    #    plt.axvline(x=x[i],ymin=0,ymax=y[i],ls='--',color='grey')
+    #    if i == 0:
+    #        plt.text(x[i],y[i]+0.25,'q*',size = 7,ha='center')
+    #    if i == 6 or i == 14:
+    #        plt.text(x[i],y[i]+0.25,'$\sqrt{%i}$'%(i+1),size = 7,ha='center')
 
-    plt.text(1.45,1,name+'.',size=12,ha='center')
+    #plt.text(1.45,1,name+'.',size=12,ha='center')
     x = np.array(X)
     y = np.array(Y)
     ax1.plot(x, y,color='#000080', marker='x', linestyle='', label=label)
     ax1.set_xlabel(xlabel)
     ax1.set_ylabel(ylabel)
-    plt.xlim(0,1.6)
-    plt.ylim(0,1.2)
+    plt.xlim(0,2)
+    plt.ylim(0,1)
     #Debye-Waller
     #annotate
     save_fig(save=save,fig_size=fig_size)

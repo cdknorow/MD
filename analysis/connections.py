@@ -63,7 +63,7 @@ def num_connections(connections,N):
     con=[]
     print 'finding # of connections'
     for i in range(len(connections)):
-        con.append(len(connections[i])/float(N)*2)
+        con.append(len(connections[i][0])/float(N)*2)
     return np.array(con)
 ## \brief find number of connections where a linker is involved
 # This is a case where there is a linking connection which can link two

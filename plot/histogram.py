@@ -44,7 +44,10 @@ def histogram(distance,bins,max_hist=0,end=1):
 # \param bins: number of bins to use
 # \param end: cutoff for the end of the histogram
 def histogram_normal(distance,bins,max_hist=0,end=1):
-    hist,bins=np.histogram(distance,bins)
+    if type(bins) is int:
+        hist,bins=np.histogram(distance,bins)
+    else:
+        hist,bins=np.histogram(distance,bins=bins)
     bin2=[]
     hist2=[]
     for i in range(len(bins)-end):
@@ -54,7 +57,9 @@ def histogram_normal(distance,bins,max_hist=0,end=1):
     hist=np.array(hist2)
     if float(max(hist))>max_hist:
         max_hist=float(max(hist))
+        print max_hist
     hists=[]
+    max_hist = float(sum(hist))
     for i in range(hist.shape[0]):
         hists.append(hist[i]/max_hist)
     hist=np.array(hists)

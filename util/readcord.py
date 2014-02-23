@@ -70,6 +70,17 @@ class ReadCord():
         index.sort()
         return index
     #################
+    # get index of Type coordingates
+    #################
+    def get_type(self,cord):
+        '''grab the indexes of a certain cord'''
+        index=[]
+        for i,j in enumerate(self.universe):
+            for c in cord:
+                if j==c:
+                    index.append(j)
+        return index
+    #################
     # get index of array coordingates
     #################
     def get_names(self,cord):
@@ -100,6 +111,26 @@ class ReadCord():
                 self.M[i][count][1]=f[j][1]
                 self.M[i][count][2]=f[j][2]
                 count+=1
+    #######################################################################
+    # search for all of the lines that have a Cord and store the coordinates
+    #######################################################################
+    def get_cord_frame(self,cord=[],frames=[0],get_index='True'):
+        if get_index:
+            print 'getting index'
+            index = self.get_index(cord)
+            print index
+        else:
+            print 'getting universe'
+            index = range(len(self.universe))
+        print 'finding positiosns'
+        for i,frame in enumerate(frames):
+            f = self.DCD.getframe(frame)
+            count=0
+            for j in index:
+                self.M[i][count][0]=f[j][0]
+                self.M[i][count][1]=f[j][1]
+                self.M[i][count][2]=f[j][2]
+                count+=1
     ###################################################################
     # return the coordinates
     #################################################################
@@ -120,16 +151,26 @@ class ReadCord():
     #also more than one cord can be passes ie ['X','G'..etc]
     ###########################################################
     def cord_range(self, cord, start=0, delta=1, last=True):
-        if last:
-            last=self.frames
         self.num_frames = (last-start)/delta
         print 'number of frames'
         print self.num_frames
         print 'Getting Cords',cord
-        self.matrix_xyz(cord)
+        self.matrix_xyz(auto=False,num_frames=last-start,cord= cord)
         self.get_cord(cord,last,start=start,delta=delta)
         return self.return_cords()
 
+    ###########################################################
+    #auto cord, note cord must be in the form ['X'] and not 'X'
+    #also more than one cord can be passes ie ['X','G'..etc]
+    ###########################################################
+    def cord_frames(self, cord, frames=[0]):
+        self.num_frames = len(frames)
+        print 'number of frames'
+        print self.num_frames
+        print 'Getting Cords',cord
+        self.matrix_xyz(auto=True, num_frames=len(frames), cord=cord)
+        self.get_cord_frame(cord, frames)
+        return self.return_cords()
     ###########################################################
     #auto cord, note cord must be in the form ['X'] and not 'X'
     #also more than one cord can be passes ie ['X','G'..etc]
@@ -138,6 +179,7 @@ class ReadCord():
         self.num_frames = (last-start)/delta
         print 'number of frames'
         print self.num_frames
+        print self.num_particles
         print 'Getting Cords'
         self.matrix_xyz(auto=False,num_frames=self.num_frames,num_cords=self.num_particles)
         self.get_cord(last=last,start=start,delta=delta,get_index=False)

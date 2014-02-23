@@ -11,6 +11,9 @@
 # Here we analyze the number of clusters formed through these networks over time.
 
 import networkx as nx
+import angle
+import MD.base.points as points
+import numpy as np
 
 ## \brief find the degree of connectivity among the graph
 #
@@ -51,20 +54,17 @@ def neighbor_find(gr):
 # \param connections connecting points at each frame
 # \param N_nodes the number of central nodes
 # \param vertex_points the number of vertex points at each node
-def grapher(connections, N_nodes, vertex_points = 1):
+def grapher(connections, N_nodes, vertex_points):
     networks = []
     degree = []
     neighbors = []
     num_neighbors = []
-    for i in connections:
+    for step,i in enumerate(connections):
         gr = nx.MultiGraph()
         gr.add_nodes_from(range(0,N_nodes))
-        for j in i:
-            #find the two connections
-            #we need to divide by the number of sites to get the right
-            #major particle index
-            A=j[0]/vertex_points
-            B=j[1]/vertex_points
+        for j in range(len(i[0])):
+            A = i[0][j]/vertex_points
+            B = i[1][j]/vertex_points+N_nodes/2
             #add the connections to a list
             gr.add_edge(A,B)
         networks.append(nx.connected_components(gr))
@@ -248,18 +248,18 @@ def sides(connections, N_nodes, vertex_points = 1, cut = 5):
 
     print counter
     return counter
-
 ## \brief create a graph using networkx package 
 #
-# \returns number of faces between two cubes which have connections
+# \returns number of faces between two cubes which are face-toface and have connections
+# \returns number of faces between two cubes which are face-toface and do not have connections
 #
 # \param connections connecting points at each frame
 # \param N_nodes the number of central nodes
 # \param vertex_points the number of vertex points at each node
-def sides_mod(connections, N_nodes, vertex_points = 1, cut = 5):
-    #Cube = np.zeros((len(connections),N_nodes,N_nodes,6))
-    Cube = [[[[] for i in range(6)] for j in range(N_nodes)] 
-        for l in range(len(connections))]
+def side_faces(VW, Z, connections, N_nodes, vertex_points = 1, cut = 5):
+    #Cube = np.zeros((len(connections),N_nodes,6))
+    Cube = [[[0.0 for i in range(6)] for
+        k in range(N_nodes)] for l in range(len(connections))]
     for k,i in enumerate(connections):
         for j in i:
             #find the two connections
@@ -267,8 +267,59 @@ def sides_mod(connections, N_nodes, vertex_points = 1, cut = 5):
             #major particle index
             A=j[0]/vertex_points
             B=j[1]/vertex_points
+            print vertex_points
             side1 = j[0]%vertex_points/(vertex_points/6)
             side2 = j[1]%vertex_points/(vertex_points/6)
+            #This provides the position of sides which are connected
+            Cube[k][A][side1].append([side2,B])
+    count_face = 0
+    count_all = 0
+    counter = []
+    for k in range(len(Cube)):
+        for j in ge(len(Cube[i])):
+            for side1 in range(6):
+                if len(Cube[k][j][i]) >= 1:
+                    for side2 in (Cube[k][j][i]):
+                        count_all += 1
+                        count_face += angle.face_check(VW,Z,k,j,side2[1],side1,side2[1],L)
+
+
+
+
+        counter.append([count_all,count_face])
+
+    print counter
+    return counter
+
+## \brief create a graph using networkx package 
+#
+# \returns number of faces between two cubes which have connections
+#
+# \param connections connecting points at each frame
+# \param N_nodes array conataining the the number of central nodes for each
+#       particle [node_A,node_B] 
+# \param vertex_points array containing the number of vertex points at each node
+#       [vertex_A,vertex_B]
+def sides_mod(connections, N_nodes, vertex_points, cut = 5):
+    #Cube = np.zeros((len(connections),N_nodes,N_nodes,6))
+    A_points = vertex_points[0]*N_nodes[0]
+    print vertex_points
+    print N_nodes
+    Cube = [[[[] for i in range(6)] for j in range(sum(N_nodes))] 
+        for l in range(len(connections))]
+    for k,i in enumerate(connections):
+        for j in i:
+            #find the two connections
+            #we need to  + Adivide by the number of sites to get the right
+            #major particle index
+            A=j[0]/vertex_points[0]
+            B=(j[1]-A_points)/vertex_points[1]+N_nodes[0]
+            side1 = j[0]%vertex_points[0]/(vertex_points[0]/6)
+            side2 = (j[1]-A_points)%vertex_points[1]/(vertex_points[1]/6)
+            if side1 > 5:
+                print 'side 1 greater than5'
+            if side2 > 5:
+                print 'side 2 greater than5'
             if Cube[k][A][side1].count(B) == 0:
                 Cube[k][A][side1].append(B)
             if Cube[k][B][side2].count(A) == 0:
@@ -285,4 +336,83 @@ def sides_mod(connections, N_nodes, vertex_points = 1, cut = 5):
         counter.append(count)
 
     print counter
+    return counter
+## \brief create a graph using networkx package 
+#
+# \returns number of faces between two cubes which have connections
+#
+# \param connections connecting points at each frame
+# \param N_nodes array conataining the the number of central nodes for each
+#       particle [node_A,node_B] 
+# \param vertex_points array containing the number of vertex points at each node
+#       [vertex_A,vertex_B]
+def sides_faces_mod(VW,Z,L,connections, N_nodes, vertex_points=1, cut = 5):
+    A_points = vertex_points[0]*N_nodes[0]
+    Cube = [[[] for j in range(sum(N_nodes))] for l in range(len(connections))]
+    for k,i in enumerate(connections):
+        for j in i:
+            #find the two connections
+            #we need to  + Adivide by the number of sites to get the right
+            #major particle index
+            A=j[0]
+            B=j[1]+N_nodes[0]
+            #This provides the position of sides which are connected
+            Cube[k][A].append(B)
+            #add the connections to a list
+    counter = np.zeros((len(Cube),3))
+    for k in range(len(Cube)):
+        count_face = 0
+        count_all = 0
+        for j in range(len(Cube[k])):
+            if len(Cube[k][j]) in cut:
+                for N in points.unique(Cube[k][j]):
+                    count_all += 1
+                    a = angle.face_check(VW,Z,k,j,N,L)
+                    if a+b==2:
+                        count_face += 1
+        if count_all == 0:
+            counter[k] = [ 0,0,0]
+        else:
+            counter[k] = [count_face,count_all,count_face/float(count_all)]
+    print 'finished counting'
+
+    return counter
+## \brief create a graph using networkx package 
+#
+# \returns number of faces between two cubes which have connections
+#
+# \param connections connecting points at each frame
+# \param N_nodes array conataining the the number of central nodes for each
+#       particle [node_A,node_B] 
+# \param vertex_points array containing the number of vertex points at each node
+#       [vertex_A,vertex_B]
+def connected_angles(VW,Z,L,connections, N_nodes, vertex_points=1, cut = 5):
+    Cube = [[[] for j in range(N_nodes[0])] for l in range(len(connections))]
+    for k,i in enumerate(connections):
+        for j in i:
+            #find the two connections
+            #we need to  + Adivide by the number of sites to get the right
+            #major particle index
+            A=j[0]
+            B=j[1]+N_nodes[0]
+            Cube[k][A].append(B)
+    counter = np.zeros((len(Cube),4))
+    for k in range(len(Cube)):
+        count_face = 0
+        count_all = 0
+        count_face_less = 0
+        count_all_less = 0
+        for i in range(len(Cube[k])):
+            for j in points.unique(Cube[k][i]):
+                if Cube[k][i].count(j)>=cut:
+                    count_all += 1
+                    if angle.face_check(VW,Z,k,i,j,1,1,L):
+                        count_face += 1
+                else:
+                    count_all_less += 1
+                    if angle.face_check(VW,Z,k,i,j,1,1,L):
+                        count_face_less += 1
+        counter[k] = [count_face,count_all,count_face_less,count_all_less]
+    print 'finished counting'
+
     return counter

@@ -34,7 +34,7 @@ def particle_distance(A,B,L):
 # \param L lenght of box 
 # \param cut cutoff for declaring the first peak
 # \param filter filter to not call it a peak below certain value
-def min_particle_distance(A,B,L,cut=10):
+def min_particle_distance(A,B,L,cut=10,verbose=False):
     d = particle_distance(A,B,L)
     hist,x = np.histogram(d,bins=75)
     #look a peak that is always greater than the next point 
@@ -50,9 +50,10 @@ def min_particle_distance(A,B,L,cut=10):
             first_peak = i
             count = 0
         if count > cut:
-            print 'first peak found',x[first_peak]
-            print hist
-            print x
+            if verbose:
+                print 'first peak found',x[first_peak]
+                print hist
+                print x
             break
     return x[first_peak]
 

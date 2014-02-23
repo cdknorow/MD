@@ -10,7 +10,6 @@ import MD.base.points as points
 import MD.plot.pyplot as pyplot
 import MD.plot.pyplot_eps as pyplot_eps
 import MD.dna_scripts.solidparticle as sp
-import MD.dna_scripts.diffusion as diffuse
 from MD.analysis.particle_distance import particle_distance
 from MD.analysis.particle_distance import min_particle_distance
 from MD.analysis.nearest_neighbor import nearest_neighbors_point
@@ -105,9 +104,9 @@ def msd(VW,L,step=1,save='MSD_time',time_scale=1):
     for i in x:
         fit.append((2*3*D2*(i) - tau*(1-math.e**(-i/tau)))**0.5)
     msd2 = (6*D*x)**0.5
-    #pyplot.plot(x,msd,xlabel='Time',ylabel='msd',save=save)
+    pyplot.plot(x,msd,xlabel='Time',ylabel='msd',save=save)
     #pyplot.plot3(x,msd,x,(6*D*x)**0.5,x,(6*D2*x)**0.5,xlabel='Time',ylabel='msd',label1='msd',label2='%.2f'%D,label3='%.2f'%D2,save=save,showleg=True)
-    pyplot.plot3(x,msd,x,(6*D2*x)**0.5,x,msd2,xlabel='Time',ylabel='msd',label1='msd',label2='%.2f'%D2,label3='%.2f'%D,save=save,showleg=True)
+    #pyplot.plot3(x,msd,x,(6*D2*x)**0.5,x,msd2,xlabel='Time',ylabel='msd',label1='msd',label2='%.2f'%D2,label3='%.2f'%D,save=save,showleg=True)
 def msd_jump_average(VW,L):
     reload(diffuse)
     try:
@@ -490,6 +489,31 @@ def mylog(row = 2):
     save = text[0].split()[row]
     pyplot.plot(x, y, xlabel='Time', ylabel=label, save=save)
     return x, y
+def mylog_average(row = 2,delta=20):
+    #read log file
+    import re
+    fid = open('mylog.log','r')
+    text = fid.readlines()
+    fid.close()
+    #loop through and pull out values we want
+    x = []
+    y = []
+    for line in text[1:]:
+        x.append(line.split()[0])
+        y.append(float(line.split()[row]))
+    count = 0
+    average = 0
+    save = text[0].split()[row]
+    fid = open(save,'w')
+    for i in range(len(y)):
+        average += y[i]
+        count+=1
+        if count == delta:
+            fid.write(("%i %.6f\n")%(i,average/delta))
+            count = 0
+            average = 0
+    fid.close()
+
 def run_defect():
     #setup
     #print out directory
@@ -544,6 +568,7 @@ def run_defect():
     #sphere_rotations(M,W,L,'N')
 def run_test():
     #print out directory dirname = os.getcwd().partition('/')[-1]
+    dirname = os.getcwd().partition('/')[-1]
     print "Starting:",dirname.split('/')[-1]
     M=MD.ReadCord()
     Lx = M.box_length
@@ -558,12 +583,12 @@ def run_test():
         W = util.pickle_load('W.pkl')
         VW = util.pickle_load('VW.pkl')
     except:
-        V=M.cord_range(['V'],delta=delta)
-        W=M.cord_range(['W'],delta=delta)
-        VW=M.cord_range(['V','W'],delta=delta)
-        #V=M.cord_auto(['V'])
-        #W=M.cord_auto(['W'])
-        #VW=M.cord_auto(['V','W'])
+        #V=M.cord_range(['V'],delta=delta)
+        #W=M.cord_range(['W'],delta=delta)
+        #VW=M.cord_range(['V','W'],delta=delta)
+        V=M.cord_auto(['V'])
+        W=M.cord_auto(['W'])
+        VW=M.cord_auto(['V','W'])
         VW_index=M.get_names(['V','W'])
         VW,V,W = drift_remove_all(VW,V,W,L,VW_index)
         util.pickle_dump(V,'V.pkl')
@@ -573,9 +598,10 @@ def run_test():
         x = range(0,V.shape[0],V.shape[0]/3)
     else:
         x = range(V.shape[0])
-    delta = 5
+    delta = 1
     #step,temp = mylog(row = 2)
     #plt.close()
+    mylog_average(row = 1,delta=20)
     msd(VW,L,time_scale=delta)
     print V
     #msd_phases(VW,L)
@@ -745,23 +771,23 @@ def run_blah2():
     x = np.arange(start,finish,dt)
     pyplot.plot(x,dmdt,save='diffusion')
 
-#For multiple directories
-if __name__ == '__main__':
-    for f in sorted(os.listdir("./")):
-        if os.path.isdir(f):
-            os.chdir(f)
-            run_test()
-            #if os.path.isdir('cont'):
-                         # os.chdir('cont')
-     #           run_test()
-    #            os.chdir('../')
-            #run_defect()
-            #try:
-            #    run_defect()
-            #except:
-            #    print "Someting Failed"
-            #print '##\nfinished with:',f
-            os.chdir('../')
+##For multiple directories
+#if __name__ == '__main__':
+#    for f in sorted(os.listdir("./")):
+#        if os.path.isdir(f):
+#            os.chdir(f)
+#            run_test()
+#            #if os.path.isdir('cont'):
+#                         # os.chdir('cont')
+#     #           run_test()
+#    #            os.chdir('../')
+#            #run_defect()
+#            #try:
+#            #    run_defect()
+#            #except:
+#            #    print "Someting Failed"
+#            #print '##\nfinished with:',f
+#            os.chdir('../')
 #for single directories
 if __name__ == '__main__':
 #    #run_debug()

@@ -189,7 +189,6 @@ def vector(p1,p2,L):
     v=(p2-p1)
     ##apply boundary conditions
     shape=v.shape
-    print v.shape
     v.transpose()[0]=map(lambda x: apply_boundary(x,L[0]),v.transpose()[0])
     v.transpose()[1]=map(lambda x: apply_boundary(x,L[1]),v.transpose()[1])
     v.transpose()[2]=map(lambda x: apply_boundary(x,L[2]),v.transpose()[2])
@@ -250,3 +249,78 @@ def angle_between(v1,v2):
 # \param p1 vector of plane with origin at 0,0,0 
 def vector_plane_projection(v,p):
     return np.cross(p,np.cross(v,p)/magnitude(p))/magnitude(p)
+##\internal
+#
+#\breif 3d fit for data points
+#
+# \returns points for a line
+#
+#\param dataset - numpy array [[x1,y1,z1],[x2,y2,z2]...]]
+def line_3D_fit(data):
+    # Calculate the mean of the points, i.e. the 'center' of the cloud
+    datamean = data.mean(axis=0)
+
+    # Do an SVD on the mean-centered data.
+    uu, dd, vv = np.linalg.svd(data - datamean)
+
+    # Now vv[0] contains the first principal component, i.e. the direction
+    # vector of the 'best fit' line in the least squares sense.
+    return vv[0]
+#\internal
+#
+#\brief Generate Rotation Matrix
+#\returns rotation matrix for by dergree thetea in 3D
+#
+#\param theta
+def rotation(theta):
+    tx,ty,tz = theta
+    Rx = np.array([[1,0,0], [0, cos(tx), -sin(tx)], [0, sin(tx),
+    cos(tx)]])
+    Ry = np.array([[cos(ty), 0, -sin(ty)], [0, 1, 0], [sin(ty), 0,
+    cos(ty)]])
+    Rz = np.array([[cos(tz), -sin(tz), 0], [sin(tz), cos(tz),
+    0], [0,0,1]])
+    return np.dot(Rx, np.dot(Ry, Rz))
+#\internal
+#
+#\brief rotation using Euler-Rodrigues formula
+#\returns rotation matrix for a rotation about axis by dergree thetea
+#
+#\param axis, theta
+def rotation_matrix(axis,theta):
+    axis = axis/np.sqrt(np.dot(axis,axis))
+    a = np.cos(theta/2)
+    b,c,d = -axis*np.sin(theta/2)
+    return  np.array([[a*a+b*b-c*c-d*d, 2*(b*c-a*d),
+            2*(b*d+a*c)],
+            [2*(b*c+a*d), a*a+c*c-b*b-d*d,
+            2*(c*d-a*b)],
+            [2*(b*d-a*c),
+            2*(c*d+a*b),
+            a*a+d*d-b*b-c*c]])
+#\internal
+#
+#\brief solution to Wahba's problem developed by Markley
+#\returns rotation matrix for a roation between two reference frames
+#
+#\param w: set of k vectors in refrence frame
+#\param v: set of k corresponding vectors in the body frame
+def Markley_matrix(w,v):
+    B = np.zeros((3,3))
+    for k in range(len(w)):
+        B += w[k].reshape(3,1)*v[k]
+    U,S,V = np.linalg.svd(B)
+    Mu = np.linalg.det(U)
+    Mv = np.linalg.det(np.transpose(V))
+    M = np.array([[1,0,0],[0,1,0],[0,0,np.dot(Mu,Mv)]])
+    return  U * M * V
+#\internal
+#
+#\brief using Mp = R*Mo, Mp*Mo-1 = R 
+#\returns rotation matrix between the two pionts
+#
+#\param Origin matrix
+#\param Prime Matrix
+def reference_rotation(Mp,Mo):
+    Mo_inverse = np.linalg.inv(Mo)
+    return np.dot(Mp,Mo_inverse)

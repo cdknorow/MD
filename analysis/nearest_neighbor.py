@@ -38,6 +38,64 @@ def nearest_neighbors_index(M,index,L,rcut=20):
         print "error No neighbors were found try reducing rcut"
     return neighbors, vectors
 
+## \brief Finds x number of neighbors to single particle.
+# 
+# \returns index of nearest neighbors
+# \returns vectors to nearest neighbors
+#
+# \param M Numpy matrix of [frames][particles][x,y,z]
+# \param index index of particle to find nearest neighbors of
+# \param L length of box correspodning to periodic boundaries
+# \param count number of neighbors to find
+#
+# To calculated the nearest neighbors M, index, and L must be specified
+# rcut will be set to a default.
+#
+#
+def count_neighbors_index(M,index,L,count=8,rcut=20):
+    neighbors = []
+    D = []
+    N = []
+    for i in range(M.shape[0]):
+        N.append([dist(M[i],M[index],L)[0],i])
+        d= dist(M[i],M[index],L)[0]
+    N.sort()
+    for i in range(1,count+1):
+        if N[i][0]<rcut:
+            neighbors.append(N[i][1])
+    vectors = vector(M[index],M[neighbors],L)
+
+    #print 'Max,Min,Average'
+    #print max(D),min(D),max(D)/len(D)
+
+    return neighbors,vectors
+
+## \brief Finds x number of neighbors to single particle an returns distances.
+# 
+# \returns distances to nearest neighbors
+#
+# \param M Numpy matrix of [frames][particles][x,y,z]
+# \param index index of particle to find nearest neighbors of
+# \param L length of box correspodning to periodic boundaries
+# \param count number of neighbors to find
+#
+# To calculated the nearest neighbors M, index, and L must be specified
+# rcut will be set to a default.
+#
+#
+def count_neighbors_distance(M,index,L,count=8,rcut=20):
+    neighbors = []
+    D = []
+    N = []
+    for i in range(M.shape[0]):
+        N.append([dist(M[i],M[index],L)[0],i])
+        d = dist(M[i],M[index],L)[0]
+    N.sort()
+    for i in range(1,count+1):
+        if N[i][0]<rcut:
+            neighbors.append(N[i][0])
+
+    return neighbors
 ## \brief finds the nearest neighbors to a point x,y,z
 # 
 # \returns index of nearest neighbors
@@ -205,3 +263,63 @@ def rcut_neighbors_point(M,point,L,rcut=10):
         return len(neighbors)
     return 0
 
+## \brief Calculates the nearest neighbors to single particle.
+#   uses a sorted list of close particles to increase speed
+# 
+# \returns index of nearest neighbors
+# \returns vectors to nearest neighbors
+#
+# \param M Numpy matrix of [frames][particles][x,y,z]
+# \param index index of particle to find nearest neighbors of
+# \param otree sorted list of nearest neighbor bins
+# \param index index of particle to find nearest neighbors of
+# \param L length of box correspodning to periodic boundaries
+# \param rcut cutoff distance for nearest neighbor search
+#
+# To calculated the nearest neighbors M, index, and L must be specified
+# rcut will be set to a default.
+#
+#
+def nn_tree_index(M,index,otree,L,rcut=20):
+    n_list = otree.get_particle_neighbors(index)
+    neighbors = []
+    vectors = []
+    for i in n_list:
+        if dist(M[i],M[index],L)[0] <= rcut and i!=index:
+            neighbors.append(i)
+    vectors = vector(M[index],M[neighbors],L)
+    if neighbors == []:
+        print "error No neighbors were found try reducing rcut"
+    return neighbors, vectors
+## \brief Finds x number of neighbors to single particle.
+# 
+# \returns index of nearest neighbors
+# \returns vectors to nearest neighbors
+#
+# \param M Numpy matrix of [frames][particles][x,y,z]
+# \param index index of particle to find nearest neighbors of
+# \param L length of box correspodning to periodic boundaries
+# \param count number of neighbors to find
+#
+# To calculated the nearest neighbors M, index, and L must be specified
+# rcut will be set to a default.
+#
+#
+def cn_tree_index(M,index,otree,L,count=8,rcut=20):
+    n_list = otree.get_particle_neighbors(index)
+    neighbors = []
+    D = []
+    N = []
+    for i in n_list:
+        N.append([dist(M[i],M[index],L)[0],i])
+        d= dist(M[i],M[index],L)[0]
+    N.sort()
+    for i in range(1,count+1):
+        if N[i][0]<=rcut:
+            neighbors.append(N[i][1])
+    vectors = vector(M[index],M[neighbors],L)
+
+    #print 'Max,Min,Average'
+    #print max(D),min(D),max(D)/len(D)
+
+    return neighbors,vectors

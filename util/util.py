@@ -112,12 +112,12 @@ def print_xyz(M,L,atoms=54,save='xyz.dat'):
     print M
     fid=open(save,'w')
     fid.write('%i\n'%(atoms))
-    fid.write('%.0f\n'%(L))
-    fid.write('%.0f\n'%(L))
-    fid.write('%.0f\n'%(L))
+    fid.write('%.7f\n'%(L))
+    fid.write('%.7f\n'%(L))
+    fid.write('%.7f\n'%(L))
     print len(M)
     for i in M:
-        fid.write('%.1f %.1f %.1f\n'%(i[0]+L/2,i[1]+L/2,i[2]+L/2))
+        fid.write('%.6f %.6f %.6f\n'%(i[0]+L/2,i[1]+L/2,i[2]+L/2))
     fid.close()
 ######################
 # export data for matlab
@@ -141,5 +141,14 @@ def pickle_dump(x,f):
     S=pickle.dump(x,output)
     output.close()
     return S
-
-
+# Write out the volume of the box
+def print_box_volume(L_cont,delta=10):
+    try:
+        fid = open('box_length.txt','w')
+        fid.write('frame  L\n') 
+        for i in range(0,len(L_cont)):
+            fid.write(('%i %.2f %.2f %.2f\n')%(i,L_cont[i][0],L_cont[i][1],L_cont[i][2]))
+        fid.close()
+        return 1
+    except:
+        return 0

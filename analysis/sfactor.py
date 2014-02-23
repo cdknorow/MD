@@ -121,6 +121,25 @@ def sf_max(QQ,qpeaks=8):
         height.append(1.0)
     return bars,height
 
+## \brief Filters out S(q) values which are below a certain level.
+#
+# \return SS is sf peaks with the noise removed
+# \return QQ is the corresponding q-vectors magnitude that go with the sf peaks
+# \returnPM is the correspoinding q-vector
+#
+# \param Q |q|
+# \param S s(q)
+# \praam primitive_vectors q vectors
+def sf_filter_max(S,Q,primitive_vectors,filters=0.05,save='sf'):
+    SS=[]
+    QQ=[]
+    PM=[]
+    for i in range(len(S)):
+        if S[i] < filters:
+            SS.append(S[i])
+            QQ.append(Q[i])
+            PM.append(primitive_vectors[i])
+    return SS,QQ,PM
 ## \brief finds the reciprical lattice as well as basis vectors
 # 
 # \returns realspace, basis vectors

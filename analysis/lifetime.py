@@ -19,11 +19,25 @@ from MD.base import points
 # \param L box length for periodic boundaries
 # \param rcut distance with which particles are defined as connected
 #
-def still_connected(A,B,connected,L,rcut):
-    con=[]
-    for i in range(len(connected)):
-        if points.dist(A[connected[i][0]],B[connected[i][1]],L)[0]<rcut:
-            con.append(connected[i])
+def still_connected(A,B):
+    con=[[],[]]
+    for i in range(len(A[0])):
+        try:
+            index = B[0][0].index(A[0][i])
+            if A[1][i] == B[0][1][index]:
+                con[0].append(A[0][i])
+                con[1].append(A[1][i])
+            else:
+                try:
+                    index2 = B[1][0].index(A[0][i])
+                    if A[1][i] == B[1][1][index2]:
+                        con[0].append(A[0][i])
+                        con[1].append(A[1][i])
+                        print index2
+                except:
+                    pass
+        except:
+            pass
     return con
 
 
@@ -36,21 +50,14 @@ def still_connected(A,B,connected,L,rcut):
 # \param L box length for periodic boundaries
 # \param rcut distance with which particles are defined as connected
 # \param dh how many frames to skip between each check
-def lifetime(A,B,L,rcut=1.0,dh=1):
+def lifetime(connections):
     counter=[]
     #Find the first connection list
-    master_connections=[]
-    connected=[]
-    for i in range(A.shape[1]):
-        for j in range(B.shape[1]):
-            if points.dist(A[0][i],B[0][j],L)[0]<rcut:
-                master_connections.append([i,j])
+    life=[]
+    master_connections = connections[0]
     #Check to see if those connections still exist in each frame
-    for k in range(0,A.shape[0]):
+    for k in range(len(connections)):
         #if they are connected there will be a 0 if not a 1
-        still = still_connected(A[k],B[k],master_connections,L,rcut)
-        master_connections=still
-        connected.append(len(still))
-        print connected[k/dh]
-    connected = np.array(connected)/float(connected[0])
-    return connected
+        master_connections =  still_connected(master_connections,connections[k:k+1])
+        life.append(len(master_connections[0]))
+    return life

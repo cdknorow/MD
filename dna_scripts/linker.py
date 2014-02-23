@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 import sys
 import os
+sys.path.append('/home/cdknorow/Dropbox/Software/')
+sys.path.append('/home/cdknorow/Dropbox/Software/MD')
 import numpy as np
 import matplotlib.pyplot as plt
 import MD
@@ -41,159 +43,157 @@ def mylog(row = 3):
     save = text[0].split()[row]
     pyplot.plot(x, y, xlabel='time', ylabel=label, save=save)
     return x, y
-#####################################################
-# Look at mixing of species of spheres
-#####################################################
-def species_mixing_initial(V,W,L,frame,rcut=False):
-    from MD.analysis.particle_distance import min_particle_distance
-    if rcut == False:
-        rcut=min_particle_distance(V[-1:],W[-1:],L)+5
-    k=frame
-    Same = np.zeros((V[0].shape[0],1))
-    Other = np.zeros((V[0].shape[0],1))
-    for i in range(V[frame].shape[0]):
-        Same[i] = len(nearest_neighbors_point(V[k],V[k][i],L,rcut=rcut)[0])
-        Other[i] = len(nearest_neighbors_point(W[k],V[k][i],L,rcut=rcut)[0])
-    x = np.arange(0, Same.shape[0])
-    pyplot.plot2(x, Same, x, Other, label1='Same', label2='other',
-            save='mixing_single', showleg=True)
-#####################################################
-# Look at mixing of species of spheres
-#####################################################
-def species_mixing(V, W, L, n_finish = 1, n_start = 0, delta = 20, rcut = False):
-    #The total number of frames we are going to look at
-    from MD.analysis.particle_distance import min_particle_distance
-    if rcut == False:
-        rcut=min_particle_distance(V[-1:],W[-1:],L)+1
-    n_frames = (n_finish-n_start)/delta
-    x = np.arange(n_start,n_finish,delta)
-    s = []
-    o = []
-    for k in x:
-        Same = 0
-        Other = 0
-        print k
-        for i in range(V[k].shape[0]):
-            Same += len(nearest_neighbors_point(V[k],V[k][i],L,rcut)[0])
-            Same += len(nearest_neighbors_point(W[k],W[k][i],L,rcut)[0])
-            Other += len(nearest_neighbors_point(W[k],V[k][i],L,rcut)[0])
-            Other += len(nearest_neighbors_point(V[k],W[k][i],L,rcut)[0])
-        s.append(float(Same)/(W[k].shape[0]+V[k].shape[0]))
-        o.append(float(Other)/(V[k].shape[0]+W[k].shape[0]))
-    pyplot.plot2(x, s, x, o, label1='Same',
-            label2='other', save='mixing_avg', showleg=True)
-#####################################################
-# Look at defects 
-#####################################################
-def find_defects(V,W,L,n_finish=1,n_start=0,delta=20,rcut=False):
-    #The total number of frames we are going to look at
-    from MD.analysis.particle_distance import min_particle_distance
-    if rcut == False:
-        rcut=min_particle_distance(V[-1:],W[-1:],L)+1
-    n_frames = (n_finish-n_start)/delta
-    x = np.arange(n_start,n_finish,delta)
-    defects = np.zeros((len(x),15))
-    # Find the number of defects in each frame
-    count = 0
-    for k in x:
-        print k
-        for i in range(V[k].shape[0]):
-            #find the points that are nearest neighbor that are different
-            defects[count] += len(nearest_neighbors_point(W[k],W[k][i],L,rcut)[0])
-            defects[count] += len(nearest_neighbors_point(V[k],V[k][i],L,rcut)[0])
-        count+=1
-    pyplot.plot(x, defects, save='defects_per_frame')
-#####################################################
-# Find Static Structure Facto
-##S is sf peaks with the noise removed
-##Q is the corresponding q-vectors magnitude that go with the sf peaks
-##Primitive vectors is the correspoinding q-vector
-#####################################################
-def structure_factor(VW, L, var, n_frames=10, n_start=1, 
-        filters=0.05, dh=0.05):
-    import MD.analysis.sfactor as sf
-    #Find Structure Factor
-    stmp,qx = sf.sfactor(VW[n_start:n_start+n_frames],L=L,l=10)
-    S,Q,primitive_vectors = sf.sort_sfpeaks(stmp,qx)
-    #Plot the graph
-    xlabel = '$|\\vec{q}$ $|$'
-    ylabel = '$S(\\vec{q}$ $)$ '
-    save = 'sf'
-    pyplot.plot(Q, S, linestyle='', marker='x', 
-            xlabel=xlabel, ylabel=ylabel, save=save)
-    QQ,SS,PM = sf.sf_filter(Q,S,primitive_vectors,filters=0.05)
-    if len(QQ)>500:
-        bars,height = sf.sf_max(QQ,qpeaks=8)
-        db_x,db_y = sf.dbfactor(msdr=5)
-        pyplot.plot_bar(bars, height, xlabel=xlabel, ylabel=ylabel,
-                save=save)
-        pyplot.plot(db_x, db_y, linestyle='--', xlabel=xlabel, ylabel=ylabel,
-                save=save)
-        return Q, S, bars, height, db_x, db_y
-    return Q, S, primitive_vectors
-############################################
-## 	g(r)
-############################################
-def distance_distribution(V,W,L,n_frames=15,n_start=1):
-    #finds end to end distances and plots a histogram with that data
-    def hist(M1,M2,save_name,label):
-        print M1
-        print M2
-        distance=particle_distance(M1,M2,L)
-        print distance
-        hist_s,xs,max_hist=histogram(distance,bins=50)
-        return xs,hist_s
-    ########################################
-    #Plot Data for AA,AB,BB distances
-    save_name='_time_'+'%i'%(n_start)
-    start=n_start
-    finish=n_start+n_frames
-    max_hist=0
-    AB=hist(V[start:finish],W[start:finish],save_name,'A-B')
-    AA=hist(W[start:finish],W[start:finish],save_name,'A-A')
-    BB=hist(V[start:finish],V[start:finish],save_name,'B-B')
-    pyplot.plot3(AA[0],AA[1],AB[0],AB[1],BB[0],BB[1],'s','g(s)',
-            'A-A','A-B','B-B',save='nnplot_'+save_name,showleg=True)
-############################################
-## msd
-############################################
-def msd(VW,L,step=5e4, save = 'MSD_time'):
-    from MD.analysis.msd import msd
-    #Find the msd of the system
-    x,msd=msd(VW,L,step=step)
-    pyplot.plot(x,msd,xlabel='time',ylabel='msd',save=save)
-######################
-# Find the solid particles in a simulation
-#####################
-def solid_particles(VW, L, var, skip=30, step=5e4, rcut = False):
-    from MD.analysis import bond_order
-    from MD.analysis.particle_distance import min_particle_distance
-    if rcut == False:
-        rcut=min_particle_distance(VW[-1:],VW[-1:],L)+6
-    BCC = []
-    SC = []
+#get connections
+def connections(M):
     try:
-        BCC = util.pickle_load('crystalbcc.pkl')
-        SC = util.pickle_load('crystalsc.pkl')
+        con = util.pickle_load('conn.pkl')
     except:
-        for i in range(0,len(VW),skip):
-            print 'step', i
-            BCC.append(bond_order.structure_correlation(VW[i], L, c_cut=0.1, rcut=rcut, l=6))
-            SC.append(bond_order.structure_correlation(VW[i], L, rcut = rcut, l=4,
-                c_cut = 0.1, crystal = 4))
-            util.pickle_dump(BCC, 'crystalbcc.pkl')
-            util.pickle_dump(SC, 'crystalsc.pkl')
+        fid = open('conn_who.dat','r')
+        c_index = M.get_index(['C'])
+        g_index = M.get_index(['G'])
+        cc_index = M.get_index(['CC'])
+        gg_index = M.get_index(['GG'])
+        con = []
+        count = 0
+        for line in fid.readlines():
+            con_K = []
+            con_T = []
+            print line
+            #linker alternates between c g and cc gg
+            if count%2 == 0:
+                line = line.replace('}','')
+                for i in line.split('{')[1].split():
+                    print i
+                    #translate connections
+                    con_K.append(c_index.index(int(i)))
+                for i in line.split('{')[2].split():
+                    #translate connections
+                    con_T.append(g_index.index(int(i)))
+            else:
+                line = line.replace('}','')
+                for i in line.split('{')[1].split():
+                    #translate connections
+                    con_K.append(cc_index.index(int(i)))
+                for i in line.split('{')[2].split():
+                    #translate connections
+                    con_T.append(gg_index.index(int(i)))
+            con.append([con_K,con_T])
+            count += 1
+        del con[-1]
+        util.pickle_dump(con,'conn.pkl')
+        print con
+        return con
+#\brief find the gauss map of connections surrounding NC
+def linker_gauss(M,VW, Z,L, frames, rcut=1.0, step=5e4):
+    A = 1
+    ndna=150
+    C = M.cord_auto(['C'])
+    CC = M.cord_auto(['CC'])
+    try:
+        conn = util.pickle_load('conn.pkl')
+    except:
+        conn = connections(M)
+        util.pickle_dump(conn,'conn.pkl')
 
-    x = np.arange(len(BCC))
-    x *= skip * step
-    xlabel = 'time'
-    ylabel = 'f(solid)'
-    SC = np.array(SC) / float(var['nsphere'])
-    BCC = np.array(BCC) / float(var['nsphere'])
-    pyplot.plot2(x, SC, x, BCC, label1 = 'SC', label2 = 'BCC', xlabel = xlabel,
-            ylabel = ylabel, save = 'crystals', showleg = True)
+    gauss_map = []
+    w = np.array([[1,0,0],[0,1,0],[0,0,1]])
+    for k in frames:
+        print k
+        conn_location = []
+        for i in conn[k*2][0]:
+            #we must rotate about a specific cube reference frame
+            cube = i/ndna
+            V = VW[k][cube]
+            x_r = points.unit(points.vector1d(V,Z[k][cube*6],L))
+            y_r = points.unit(points.vector1d(V,Z[k][cube*6+2],L))
+            z_r = points.unit(points.vector1d(V,Z[k][cube*6+4],L))
+            v = np.array([x_r,y_r,z_r])
+            R = points.reference_rotation(v,w)
+            d = points.dist(V,C[k][i],L)[0]
+            c_r = points.unit(points.vector1d(V,C[k][i],L))
+            conn_location.append(points.unit(np.dot(R,np.transpose(c_r)))*d)
+        for i in conn[k*2+1][0]:
+            #A is the number of A cubes
+            cube = i/ndna
+            V = VW[k][cube]
+            x_r = points.unit(points.vector1d(V,Z[k][cube*6],L))
+            y_r = points.unit(points.vector1d(V,Z[k][cube*6+2],L))
+            z_r = points.unit(points.vector1d(V,Z[k][cube*6+4],L))
+            v = np.array([x_r,y_r,z_r])
+            R = points.reference_rotation(v,w)
+            c_r = points.unit(points.vector1d(V,CC[k][i],L))
+            conn_location.append(points.unit(np.dot(R,np.transpose(c_r))))
+        gauss_map.append(conn_location)
+    #########
+    fid = open('gaussmap_connections.xyz','w')
+    max_gauss = 0
+    for k in gauss_map:
+        if len(k) > max_gauss:
+            max_gauss = len(k)
+    for k in range(len(gauss_map)):
+        fid.write('%i\n%i\n'%(max_gauss+4,frames[k]))
+        fid.write('E  1 0 0\n')
+        fid.write('E  0 1 0\n')
+        fid.write('E  0 0 1\n')
+        fid.write('V  0 0 0\n')
+        for i in gauss_map[k]:
+            fid.write('N  %.3f %.3f %.3f\n'%(i[0],i[1],i[2]))
+        for i in range(max_gauss - len(gauss_map[k])):
+            fid.write('N  0 0 0\n')
+    fid.close()
+    ###########
+    fid = open('gaussmap_connections_total.xyz','w')
+    max_gauss = 0
+    for k in gauss_map:
+        max_gauss+=len(k)
+    fid.write('%i\n\n'%(max_gauss+4))
+    fid.write('E  1 0 0\n')
+    fid.write('E  0 1 0\n')
+    fid.write('E  0 0 1\n')
+    fid.write('V  0 0 0\n')
+    for k in range(len(gauss_map)):
+        for i in gauss_map[k]:
+            fid.write('N  %.3f %.3f %.3f\n'%(i[0],i[1],i[2]))
+    fid.close()
+def test_linker_gauss(M,VW, Z,L, frames, rcut=1.0, step=5e4):
+    A = 1
+    ndna=100
+    C = M.cord_auto(['C'])
+    CC = M.cord_auto(['CC'])
 
-    return x, BCC, SC
+    gauss_map = []
+    w = np.array([[1,0,0],[0,1,0],[0,0,1]])
+    test_k = np.array([[0.5,0.5,0.5],[0.5,-0.5,0.5],[0.5,0.5,-0.5],
+                        [-0.5,0.5,0.5],[-0.5,-0.5,0.5]])
+    for k in frames:
+        conn_location = []
+        for i in test_k:
+            #we must rotate about a specific cube reference frame
+            cube = 0
+            V = VW[k][cube]
+            x_r = points.unit(points.vector1d(V,Z[k][cube*6],L))
+            y_r = points.unit(points.vector1d(V,Z[k][cube*6+1],L))
+            z_r = points.unit(points.vector1d(V,Z[k][cube*6+5],L))
+            v = np.array([x_r,y_r,z_r])
+            R = points.reference_rotation(v,w)
+            print R
+            print v
+            print '######'
+            print np.dot(R,v)
+            print points.unit(np.dot(R,i))
+            conn_location.append(points.unit(np.dot(R,i)))
+        gauss_map.append(conn_location)
+    fid = open('gaussmap_connections_test.xyz','w')
+    max_gauss = 0
+    for k in gauss_map:
+        if len(k) > max_gauss:
+            max_gauss = len(k)
+    for k in range(len(gauss_map)):
+        fid.write('%i\n%i\n'%(max_gauss,frames[k]))
+        for i in gauss_map[k]:
+            fid.write('N  %.3f %.3f %.3f\n'%(i[0],i[1],i[2]))
+        for i in range(max_gauss - len(gauss_map[k])):
+            fid.write('N  0 0 0\n')
 #########################################
 # What you want to do in those directories
 ########################################
@@ -221,119 +221,6 @@ def end_end(M,L,var):
 
     pyplot.plot_bar(xedge,hist_edge,save='linker_distance')
     plt.close()
-## \brief Number of Connections betweeen linkers
-#
-# \returns steps x frames number for each data point
-# \returns connections_A,connections_B list of connections in each frame
-# \returns one, two number of connections in each frame
-#
-# \param M lets you read variables into a Matrix ie M.courd_auto(['G'])
-# \param L Length of box
-# \param var dictionary of variables read from the file path name
-# \param n_finish the last frame to look at
-# \param n_start is the first frame to look at
-# \param delta the number of frames to skip over
-# \param rcut the distance a connection is defined by 
-# \param step lets the plot know have many timesteps between each frame
-#
-def find_linker_connections(M, L, var,n_finish, n_start=1,
-        delta=30, rcut=1.0, step=5e4):
-    #The total number of frames we are going to look at
-    n_frames = (n_finish - n_start) / delta
-    x = np.arange(n_start,n_finish,delta)
-    print x
-    steps = x * step
-    #Find he number of connections at specific points x
-    import MD.analysis.connections as con
-    reload(con)
-    try:
-        connections_A = util.pickle_load('conA.pkl')
-        connections_B = util.pickle_load('conB.pkl')
-    except:
-        try:
-            C = util.pickle_load('C.pkl')
-            G = util.pickle_load('G.pkl')
-            CC = util.pickle_load('CC.pkl')
-            GG = util.pickle_load('GG.pkl')
-        except:
-            C = M.cord_auto(['C'])
-            G = M.cord_auto(['G'])
-            CC = M.cord_auto(['CC'])
-            GG = M.cord_auto(['GG'])
-            C = util.pickle_dump(C,'C.pkl')
-            G = util.pickle_dump(G,'G.pkl')
-            CC = util.pickle_dump(CC,'CC.pkl')
-            GG = util.pickle_dump(GG,'GG.pkl')
-        #put the linker second to keep track
-        connections_A = con.connections(C[x],G[x],L,rcut=rcut)
-        connections_B = con.connections(GG[x],CC[x],L,rcut=rcut)
-        util.pickle_dump(connections_A,'conA.pkl')
-        util.pickle_dump(connections_B,'conB.pkl')
-    one,two,l1,l2 = con.both_connections(connections_A,connections_B)
-    connections_A = con.num_connections(connections_A,var['nsphere'])/2.
-    connections_B = con.num_connections(connections_B,var['nsphere'])/2.
-    pyplot.plot2(steps, connections_A, steps, connections_B,
-            label1='C',label2='CC', xlabel='time', ylabel='hyrbid. density',
-            save='connections',showleg=True)
-
-
-    pyplot.plot2(steps, np.array(one)/27., steps, np.array(two)/27.,
-            label1='One Connection',label2='Two Connections',
-            xlabel='time', ylabel='hybrid density', save='link_con_hy',
-            showleg=True)
-    util.pickle_dump([one,two],'one_two.pkl')
-    #three = [CC.shape[1] for i in range(len(one))]
-    three = [800 for i in range(len(one))]
-    #print 'linkers'
-    #print CC.shape[1]
-    three = np.subtract(three, one)
-    three = np.subtract(three, two)
-    pyplot.plot3(steps, one, steps, two, steps, three,
-            label1='One Connection',label2='Two Connections', label3='No Connections',
-            xlabel='time', ylabel='num con', save='link_con',
-            showleg=True)
-    plt.close()
-    return steps, connections_A, connections_B, one, two
-def find_linker_fcc_connections(M, L, var,n_finish, n_start=1,
-        delta=30, rcut=1.0, step=5e4):
-    #The total number of frames we are going to look at
-    n_frames = (n_finish - n_start) / delta
-    x = np.arange(n_start,n_finish,delta)
-    print x
-    steps = x * step
-    #Find he number of connections at specific points x
-    import MD.analysis.connections as con
-    reload(con)
-    try:
-        connections_A = util.pickle_load('conA.pkl')
-        connections_B = util.pickle_load('conB.pkl')
-    except:
-        C = M.cord_auto(['C'])
-        G = M.cord_auto(['G'])
-        #put the linker second to keep track
-        connections_A = con.connections(C[x],G[x][range(1,G.shape[1],2)],L,rcut=rcut)
-        connections_B = con.connections(C[x],G[x][range(0,G.shape[1],2)],L,rcut=rcut)
-        util.pickle_dump(connections_A,'conA.pkl')
-        util.pickle_dump(connections_B,'conB.pkl')
-    one,two,l1,l2 = con.both_connections(connections_A,connections_B)
-    connections_A = con.num_connections(connections_A,var['nsphere'])
-    connections_B = con.num_connections(connections_B,var['nsphere'])
-    pyplot.plot2(steps, connections_A, steps, connections_B,
-            label1='C',label2='CC', xlabel='time', ylabel='hyrbid. density',
-            save='connections')
-
-    #three = [CC.shape[1] for i in range(len(one))]
-    three = [800 for i in range(len(one))]
-    #print 'linkers'
-    #print CC.shape[1]
-    three = np.subtract(three, one)
-    three = np.subtract(three, two)
-    pyplot.plot3(steps, one, steps, two, steps, three,
-            label1='One Connection',label2='Two Connections', label3='No Connections',
-            xlabel='time', ylabel='num con', save='link_con',
-            showleg=True)
-    plt.close()
-    return steps, connections_A, connections_B, one, two
 def find_linker_distance(M, L, var, frame = -1,rcut=1.0, step=5e4):
     #The total number of frames we are going to look at
     #Find he number of connections at specific points x
@@ -380,6 +267,30 @@ def find_linker_distance(M, L, var, frame = -1,rcut=1.0, step=5e4):
     x,msd=msd(CC,L,step=50000)
     pyplot.plot(x,msd,xlabel='time',ylabel='msd',save='msd_linker')
     return edge
+############################################
+# lifetime of connections
+########################################
+def find_lifetime(M,L,steps,step_range=30,delta=4,rcut=1.0,step=5e4):
+    import MD.analysis.lifetime as life
+    try:
+        C = util.pickle_load('C.pkl')
+        G = util.pickle_load('G.pkl')
+    except:
+        C=M.cord_auto(['C'])
+        G=M.cord_auto(['G'])
+        util.pickle_dump(C,'C.pkl')
+        util.pickle_dump(G,'G.pkl')
+    #The total number of frames we are going to look at
+    for i in steps:
+        print 'Frame',i
+        x=np.arange(i,step_range+i,delta)
+        #Find he number of connections at specific points x
+        remain = life.lifetime(C[x],G[x],L)
+        x=np.arange(i,step_range+i,delta)*50000
+        print remain
+        pyplot.plot(x,remain,xlabel='time', ylabel='remaining connections',
+                save='lifetime%i'%i)
+        plt.close()
 ## \brief find number of a specified pair of particles that are within r_cut of each
 #
 # \returns x cordinates of x graph
@@ -461,138 +372,76 @@ def find_lifetime(M,L,n_finish=30,n_start=1,delta=4,rcut=1.0,step=5e4):
     pyplot.plot2(steps,remain,steps,remain2,xlabel='time',
             ylabel='remaining connections', label1='A Conn', label2='Bconn',save='lifetime')
     return steps,remain,remain2
+def print_box_volume(L_cont,delta=10):
+    fid = open('box_length.txt','w')
+    T = 5+8**0.6
+    fid.write('frame  L   phi\n') 
+    for i in range(0,len(L_cont),delta):
+        if L_cont[i][0] != 0:
+            phi = 54*T**3/L_cont[i][0]**3
+            fid.write(('%i   %.2f   %.2f\n')%(i,L_cont[i][0],phi))
+    fid.close()
 #################################################
 # What to run
 #################################################
-def run_all():
-    #setup
-    MD.util.dcd_to_xyz()
+def run_single():
     dirname = os.getcwd().partition('/')[-1]
     print "Starting:",dirname.split('/')[-1]
-    last = MD.util.get_total_frames('dna')
-    var = MD.util.get_path_variables()
-    L = MD.util.get_box_size()
-    M=MD.ReadCord(frames=last)
-    V=M.cord_auto(['V'])
-    W=M.cord_auto(['W'])
-    VW=M.cord_auto(['V','W'])
-    #analysis
-    #try:
-    #    print 'Finding End to End'
-    #    end_end(V,W,M,L,var)
-    #    plt.close()
-    #except:
-    #    print 'end_end failed'
-    try:
-        print 'Finding MSD'
-        msd(VW,L)
-        plt.close()
-    except:
-        print 'MSD_end failed'
-    try:
-        print 'finding sf'
-        structure_factor(VW, L, var, n_start=last-20)
-    except:
-        print 'sf failed'
-    try:
-        print "finding g(s)"
-        distance_distribution(V,W,L,n_start=last-20)
-        plt.close()
-    except:
-        print 'g(s) failed'
-    try:
-        print 'finding connections'
-        find_linker_connections(M,L,var,n_finish=last,delta=30)
-        plt.close()
-    except:
-        print 'connections failed'
-    try:
-        print 'finding newtorks'
-        find_networks(M, VW, L, var, last)
-    except:
-        print 'finding networks failed'
-    #try:
-    #    print 'finding solid particles'
-    #    solid_particles(VW,L,var)
-    #    plt.close()
-    #except:
-    #    print 'solid particles failed'
-    #try:
-    #    print 'Finding Speceies Mixing'
-    #    species_mixing(V,W,L,frame=1)
-    #    plt.close()
-    #except:
-    #    print 'species mixing failed'
-    #################################################
-def run_quick():
-    #setup
-    MD.util.dcd_to_xyz()
+    #initial file
     dirname = os.getcwd().partition('/')[-1]
     print "Starting:",dirname.split('/')[-1]
-    last = MD.util.get_total_frames('dna')
-    var = MD.util.get_path_variables()
-    L = MD.util.get_box_size()
-    M=MD.ReadCord(frames=last)
-    V=M.cord_auto(['V'])
-    W=M.cord_auto(['W'])
-    VW = V
-    #VW=M.cord_auto(['V','W'])
-    #print 'Finding MSD'
-    #msd(VW,L)
-    #plt.close()
-    #print 'finding sf'
-    #structure_factor(VW, L, var, n_start=last-20)
-    #plt.close()
-    ##print "finding g(s)"
-    #distance_distribution(V,V,L,n_start=last-20)
-    #plt.close()
-    #end_end(M,L,var)
-    #plt.close()
-    find_linker_connections(M,L,var,delta=10,n_finish=last)
-    plt.close()
-    #find_linker_distance(M, L, var)
+    delta = 10
+    M=MD.ReadCord()
+    Lx = M.box_length
+    Ly = M.box_length_y
+    Lz = M.box_length_z
+    L = np.array([Lx, Ly, Lz])
+    L_cont = M.box_volume()
+    L_cont[-1] = L_cont[-2]
+    print_box_volume(L_cont,delta=delta)
+    last = M.frames
+    V_index = M.get_index(['V'])
+    W_index = M.get_index(['W'])
+    try:
+        #V = util.pickle_load('V.pkl')
+        Z = util.pickle_load('Z.pkl')
+        VW = util.pickle_load('VW.pkl')
+    except:
+    #    #V=M.cord_auto(['V'])
+         Z=M.cord_auto(['Z'])
+         VW=M.cord_auto(['V','W'])
+         #VW,Z,W = drift_remove_all(VW,Z,VW,L)
+    #    util.pickle_dump(V,'V.pkl')
+         util.pickle_dump(Z,'Z.pkl')
+         util.pickle_dump(VW,'VW.pkl')
+    #drift_remove_all(VW,Z,VW,L)
+    #x = range(0,last,delta)
+    x = [100]
+    #cubic_order_animate(VW,Z,L_cont,x)
+    x = range(400,last)
+    linker_gauss(M,VW,Z, L, x)
+    #test_linker_gauss(M,VW,Z, L, x)
+    #cubic_order(VW,Z,L_cont,x)
+    #cube_connected_rotate(VW,Z,M, L_cont)
+    #cubic_order(VW,Z,L_cont,x)
+    #frames = [25,last-5]
+    #polymer length
+    #center_end_connected(M,L_cont)
+    #cube_connected_single_face(M, L_cont)
+    #end_end_connected(M,L_cont)
+    #end_end(M,L_cont)
+    #cube_connected_angle(VW, Z, M, L_cont)
+    #cube_angle(Z,VW,L_cont,delta=delta)
+    #rotation_diffusion(Z,VW,L_cont)
+    #######################
+    ######################
+    #msd(VW,L_cont[0],step=1)
+    #rotations_area(Z,VW,L_cont)
+    #rotation_diffusion_split(Z,VW,L_cont,x)
+    import MD.analysis.cubatic_order as c
+    print VW.shape
+    #c.gaussmap(VW,Z,L_cont,x,3)
 #################################################
-# What run without exceptions
-#################################################
-def run_debug():
-    #setup
-    MD.util.dcd_to_xyz()
-    dirname = os.getcwd().partition('/')[-1]
-    print "Starting:",dirname.split('/')[-1]
-    last = MD.util.get_total_frames('dna')
-    var = MD.util.get_path_variables()
-    L = MD.util.get_box_size()
-    M=MD.ReadCord(frames=last)
-    V=M.cord_auto(['V'])
-    W=M.cord_auto(['W'])
-    VW=M.cord_auto(['V','W'])
-    #code to ,,teset
-    print 'end2end'
-    ##end_end(M,L,var)
-    #print 'msd'
-    #msd(VW,L)
-    #print 'sf'
-    #structure_factor(VW, L, var, n_start=last-20)
-    #print 'gs'
-    #distance_distribution(V,W,L,n_start=last-20)
-    print 'con'
-    find_linker_connections(M,L,var,n_finish=last,delta=30)
-    #print 'net'
-    #find_networks(M, VW, L, var, last)
-    #print 'sp'
-    #solid_particles(VW,L,var)
-    #print 'sm'
-    #species_mixing(V,W,L,n_finish = last)
-    #print 'fd'
-    #find_defects(V,W,L,n_finish = last)
-    #print 'mylog'
-    #mylog(row=3)
-    #print 'mylog'
-    #mylog(row=2)
-    #print 'sp_initial'
-    #species_mixing_initial(V,W,L,frame=1)
-    #print 'fl'
-    #find_lifetime(M,L,n_finish=30,n_start=last-45)
 ##For multiple directories
 #if __name__ == '__main__':
 #    for f in sorted(os.listdir("./")):
@@ -607,4 +456,4 @@ def run_debug():
 #            os.chdir('../')
 #For single directories
 if __name__ == '__main__':
-    run_quick()
+    run_single()

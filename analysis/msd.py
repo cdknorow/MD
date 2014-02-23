@@ -75,7 +75,7 @@ def boundary_cross(p1,p2,L,B):
 #
 # msd is defined as 
 # \f{eqnarray*}
-# MSD(t) = \sum_{i=0}^N(r(0)_{i}-r(t)_i)^{0.5} 
+# MSD(t) = \sum_{i=0}^N(r(0)_{i}-r(t)_i)^{2} 
 # \f}
 #where r0 is the inital
 # r vector of the particle and ri is ith particle in frame k. the msd is
@@ -105,8 +105,10 @@ def msd(A,L,step=1):
         for i in range(num):
             B[i] = boundary_cross(A[k][i], A[k+1][i], L, B[i])
             d = points.dist_np(A[0][i][0:3] + Drift[k], A[k+1][i][0:3] - B[i] * L)
-            if d[0] > 1:
-                r_sum = d[0]**2 / num + r_sum
+            #why is this here?
+            #if d[0] > 1:
+                #r_sum = d[0]**2 / num + r_sum
+            r_sum = d[0]**2 / num + r_sum
         MSD[k] = r_sum
     x = np.arange(0, A.shape[0] * step - step, step)
     return x,MSD
@@ -183,6 +185,6 @@ def msd_no_drift(A,L,step=1):
             ri = A[0][i][0:3]
             r = (ri-rt)
             r_sum += np.dot(r,r) / float(num)
-        MSD[k] = r_sum**0.5
+        MSD[k] = r_sum
     x = np.arange(0, A.shape[0] * step - step, step)
     return x,MSD

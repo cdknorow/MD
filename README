@@ -1,0 +1,40 @@
+MD
+
+MD is a python toolkit to analyze molecular dynamics
+trajectories in xyz format. 
+Typicall use case is file oputput from hoomd in the form of
+.dcd and .mol2. Catdcd is used to convert them into xyz.txt
+catdcd is from vmd.
+
+MD allows one to read molecular dynamics trajectories and access the
+atomic coordinates through numpy arrays. This provides a flexible and
+relatively fast framework for complex analysis tasks. 
+
+Citation
+--------
+When using MD in published work, please cite
+ 	Knorowski, C.
+ Thanks!
+
+Dependecies:
+--------------
+ numpy, networkx, scipy, matplotlib, python >  2.4 but not 3.0+, catdcd(included)
+
+Documentation
+------------
+DOcumentation is generated using Doxygen. To generate documentation simply run
+
+doxygen Doxyfile
+
+ Getting started
+ ---------------
+
+ Import the package::
+ 
+  >>> import MD
+
+
+ Examples
+ --------
+
+see dna_scripts
