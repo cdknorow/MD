@@ -38,7 +38,6 @@ class DCD:
             dat = up('80c',f.read(cs('80c')))
             self.remarks.append(
                 string.strip(string.joinfields(dat,'')))
-            print self.remarks[-1]
         #errors start here
         if up('i',f.read(cs('i')))[0] != size :
             print "DCD format error 4"
@@ -69,7 +68,7 @@ class DCD:
         #get to the end of the file
         f.seek(0,2)
         #number of frames
-        self.numframes = (f.tell()-self.pos2)/self.rlen + 1
+        self.numframes = (f.tell()-self.pos1)/(self.rlen +self.boxhead)
         #number of atoms
         self.numatoms = self.N
         self.box_V = [[0,0,0] for i in range(self.numframes)]
@@ -92,7 +91,7 @@ class DCD:
             return self.__getitem__(self.numframes + fn)
         else :
             #jump to the frame to get data from
-            f.seek(self.pos2 + self.boxhead*(1+fn)+(fn-1)*self.rlen)
+            f.seek(self.pos1 + self.boxhead*(1+fn)+(fn)*self.rlen)
         # Read data
         size = up('i',f.read(cs('i')))[0]
         if size != cs(repr(self.N)+'f') :
@@ -123,15 +122,20 @@ class DCD:
         cs = struct.calcsize
         f = self.file
         # Find the right point in the file
-        for fn in range(self.numframes-1):
-            f.seek(self.pos1 + self.boxhead*(fn)+(fn)*self.rlen)
-            up('i',f.read(cs('i')))
-            self.box_V[fn][0] = up('d',f.read(cs('d')))[0]
-            up('d',f.read(cs('d')))[0]
-            self.box_V[fn][1] = up('d',f.read(cs('d')))[0]
-            up('d',f.read(cs('d')))
-            up('d',f.read(cs('d')))
-            self.box_V[fn][2] = up('d',f.read(cs('d')))[0]
+        for fn in range(self.numframes):
+            try:
+                f.seek(self.pos1 + self.boxhead*(fn)+(fn)*self.rlen)
+                up('i',f.read(cs('i')))
+                self.box_V[fn][0] = up('d',f.read(cs('d')))[0]
+                up('d',f.read(cs('d')))[0]
+                self.box_V[fn][1] = up('d',f.read(cs('d')))[0]
+                up('d',f.read(cs('d')))
+                up('d',f.read(cs('d')))
+                self.box_V[fn][2] = up('d',f.read(cs('d')))[0]
+            except:
+                print 'Number of Frames is Wrong'
+                print "Number of Frames = ",fn
+                aasdf
         return self.box_V
     def __len__(self):
         return self.numframes

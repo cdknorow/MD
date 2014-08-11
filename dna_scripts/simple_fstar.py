@@ -4,9 +4,11 @@ import sys
 import os
 sys.path.append('/home/cdknorow/Dropbox/Software/')
 sys.path.append('/home/cdknorow/Dropbox/Software/MD')
+import time
 import numpy as np
 import math
 import matplotlib.pyplot as plt
+import h5py
 import MD
 import MD.analysis.particle_distance as p_dist
 import MD.util as util
@@ -46,10 +48,11 @@ def msd(VW,L,step=1):
     x,msd=msd(VW,L,step=step)
     print x
     print msd
-    pyplot.plot(x,msd,xlabel='time',ylabel='msd',save='MSDtime')
+    #pyplot.plot(x,msd,xlabel='time',ylabel='msd',save='MSDtime')
     util.pickle_dump(msd,'msd.pkl')
 ############################################ ## msd
 ############################################
+    print bin2
 def msd(VW,L,step=1,save='MSD_time',time_scale=1):
     from MD.analysis.msd import msd as _msd #Find the msd of the system x,msd=msd_no_drift(VW,L,step=step)
     try:
@@ -60,7 +63,7 @@ def msd(VW,L,step=1,save='MSD_time',time_scale=1):
         x, msd = _msd(VW,L)
         x = x*time_scale
         util.pickle_dump([[x],[msd]],'msd.pkl')
-    pyplot.plot(x,msd,xlabel='Time',ylabel='msd',save=save)
+    #pyplot.plot(x,msd,xlabel='Time',ylabel='msd',save=save)
 ############################################
 ## returns the arrays with the drift removed
 ############################################
@@ -170,7 +173,7 @@ def mylog_volume(L,row = 2):
     label = re.sub("_"," ",text[0].split()[row])
     save = text[0].split()[row]
     print x
-    pyplot.plot(x, y, xlabel='Volume', ylabel=label, save=save)
+    #pyplot.plot(x, y, xlabel='Volume', ylabel=label, save=save)
     fid = open('box_size','w')
     for i in range(len(x)):
         print x[i]
@@ -205,6 +208,24 @@ def distance_distribution(V,L,n_frames=15,n_start=1,end=10):
     for i in range(len(BB[1])):
         out.write(('%.5f %.5f\n')%(BB[0][i],BB[1][i]))
     out.close()
+############################################
+## Generate Pickle of Distances
+############################################
+def PMF(hpy, V,L,n_frames=15,n_start=1,end=1):
+    start=n_start
+    finish=n_start+n_frames
+    time_start = time.clock()
+    distance=particle_distance(V[start:finish],V[start:finish],L)
+    print "g(r) Elapsed Time -" , time.clock()-time_start
+    time_start = time.clock()
+    dset = hpy.create_dataset("%i"%n_start, data = np.array(distance))
+    dset.attrs.create("N_atoms",V.shape[1])
+    dset.attrs.create("L",L[0])
+    dset.attrs.create("n_frames",n_frames)
+
+    #util.marshal_dump([V.shape[1],L[0],n_frames,distance], 'pmf_dist%i.pkl'%n_start)
+    print "Marshal Elapsed Time -" , time.clock()-time_start
+################k
 ## 	g(r)
 ############################################
 def linear_distribution(V,L,n_frames=15,n_start=1,end=10):
@@ -231,84 +252,7 @@ def linear_distribution(V,L,n_frames=15,n_start=1,end=10):
     for i in BB[1]:
         out.write(('%.2f\n')%(i))
     out.close()
-############################################
-## 	g(r)
-############################################
-def distance_distribution_bakos(V,L,x,smooth=1):
-    #finds end to end distances and plots a histogram with that data
-    def bakos_dist(M,N,L,rcut = 30):
-        distance =[]
-        print L
-        for i in range(M.shape[0]):
-            for j in range(N.shape[0]):
-                distance.append(points.dist(M[i],N[j],L)[0])
-                if distance[-1] > rcut or distance[-1]<1:
-                    del distance[-1]
-        return distance
-    def hist(distance):
-        hist_s,xs,max_hist=histogram_normal(np.array(distance),bins=np.arange(5,30,0.05))
-        #hist_s,xs,max_hist=histogram_normal(np.array(distance),bins=30)
-        #normalize the function with respect to an ideal gas
-        return xs,hist_s
-    ########################################
-    #Plot Data for AA,AB,BB distances
-    AA = []
-    AB = []
-    AC = []
-    AD = []
-    for frame in x:
-        save_name='_time_'+'%i'%(frame)
-        max_hist=0
-        fid = open('animate/bakos_index%i.txt'%frame,'r')
-        M = fid.readlines()
-        A =[]
-        B = []
-        C = []
-        D = []
-        for i,line in enumerate(M):
-            if int(line) == 1:
-                A.append(V[frame][i])
-            if int(line) == 2:
-                B.append(V[frame][i])
-            if int(line) == 3:
-                C.append(V[frame][i])
-            if int(line) == 0:
-                D.append(V[frame][i])
 
-        A = np.array(A)
-        B = np.array(B)
-        C = np.array(C)
-        D = np.array(D)
-
-        AA.extend(bakos_dist(A,A,L[frame]))
-        AB.extend(bakos_dist(A,B,L[frame]))
-        AC.extend(bakos_dist(A,C,L[frame]))
-        AD.extend(bakos_dist(A,D,L[frame]))
-    print "neigbors for AA"
-    print len(AA)
-    print "neigbors for AB"
-    print len(AB)
-    print "neigbors for AC"
-    print len(AC)
-    print "neigbors for AD"
-    print len(AD)
-    AAtotal = hist(AA)
-    ABtotal = hist(AB)
-    ACtotal = hist(AC)
-    ADtotal = hist(AD)
-    fid = open('nnbakos.txt','w')
-    for i in range(AAtotal[0].shape[0]):
-        fid.write('%.3f %.6f %.6f %.6f %.6f\n'%
-                (AAtotal[0][i],AAtotal[1][i],ABtotal[1][i],ACtotal[1][i],ADtotal[1][i]))
-    fid.close()
-
-
-
-    pyplot.plot4(AAtotal[0],AAtotal[1],ABtotal[0],ABtotal[1],ACtotal[0],ACtotal[1],ADtotal[0],ADtotal[1],xlabel='s',ylabel='g(s)',save='nnplot_'+save_name,
-            label1='A-A',label2='A-B',label3='A-C',label4='A-D',showleg=True)
-    #pyplot.plot(AB[0],AB[1],xlabel='s',ylabel='g(s)',save='nnplot_'+save_name)
-    #pyplot.plot(AC[0],AC[1],xlabel='s',ylabel='g(s)',save='nnplot_'+save_name)
-    #pyplot.plot(AD[0],AD[1],xlabel='s',ylabel='g(s)',save='nnplot_'+save_name)
 #####################################################
 # Find Static Structure Facto
 ##S is sf peaks with the noise removed
@@ -355,7 +299,7 @@ def structure_factor(VW, L, n_frames=10, n_start=1,
             filters=filters,save=save)
     import MD.analysis.reconstruct_lattice as rl
     import MD.unit.make_bcc as mb
-    con = False
+    con = True
     while con:
         a1,a2,a3 = rl.reconstruct_lattice(Q,primitive_vectors,save+'recipricol.txt')
         print a1,a2,a3
@@ -371,7 +315,7 @@ def structure_factor(VW, L, n_frames=10, n_start=1,
 ##Primitive vectors is the correspoinding q-vector
 #####################################################
 def self_intermediate_scattering(VW, L, x, n_start=1, 
-        filters=0.05, dh=0.05,save='sf',l=5,delta=5,calc=True,skip=1):
+        filters=0.05, dh=0.05,save='sf',l=5,delta=5,calc=True):
     import MD.analysis.sfactor as sf
     #Find Structure Factor
     if calc:
@@ -379,10 +323,11 @@ def self_intermediate_scattering(VW, L, x, n_start=1,
         from MD.canalysis.int_scattering import int_scatter
         F = []
         for i in range(delta):
+            print i
             print "caculating Average" 
             print VW.shape
-            A = VW[n_start+delta]
             print "Structure Factor" 
+            A = VW[n_start+i]
             stmp,qx = sf.sfactor(np.array([A]),L=L[n_start],l=l)
             S,Q,primitive_vectors = sf.sort_sfpeaks(stmp,qx)
             S,Q,primitive_vectors = sf.sf_filter_max(S,Q,primitive_vectors,filters=0.5)
@@ -391,8 +336,8 @@ def self_intermediate_scattering(VW, L, x, n_start=1,
             #take the average over different starting configurations
             print "Calculating Int Scattering" 
             start = time.clock()
-            scat_c = int_scatter(VW,np.array(L[0]),np.array(k),
-                    np.array(x[i:]),skip=skip)
+            scat_c = int_scatter(VW[n_start+i:],np.array(L[0]),np.array(k),
+                    np.array(x[:-(n_start+i)]))
             end = time.clock()
             print 'cython runtime'
             print end-start
@@ -426,8 +371,8 @@ def self_intermediate_scattering(VW, L, x, n_start=1,
         K_x.append(i)
     #pyplot.plot(x,F_avg, linestyle='',marker='x', xlabel=xlabel,
     #        ylabel=ylabel,logx=True,limx=(0,100), save=save)
-    pyplot.plot2(x,F_avg,K_x,K, xlabel=xlabel,
-            ylabel=ylabel,logx=True,limy=(0,1.0),limx=(0,100), save=save)
+    #pyplot.plot2(x,F_avg,K_x,K, xlabel=xlabel,
+            #ylabel=ylabel,logx=True,limy=(0,1.0),limx=(0,100), save=save)
 ######################
 # FInd the solid particles in a simulation
 #####################
@@ -440,17 +385,7 @@ def solid_particles_bcc(VW,L,x,step=5e4,rcut=False):
     #if os.path.exists('sccrystals.xyz') == False:
     #    sp.solid_particles_VW(VW,L,['V','V'],skip=skip,step=5e4,rcut=False)
     #sp.crystal_size_cube(L,VW.shape[0]/skip,VW.shape[1])
-######################
-# FInd the solid particles in a simulation
-#####################
-def Q6Q4_map(VW,L,x,step=5e4,rcut=False):
-    import MD.dna_scripts.solidparticle as sp
-    reload(sp)
-    sp.q6q4_fast_map(VW,L,x,step=5e4,avg=5,rcut=rcut)
-    #sp.crystal_size(L,VW.shape[0]/skip,VW.shape[1])
-    #if os.path.exists('sccrystals.xyz') == False:
-    #    sp.solid_particles_VW(VW,L,['V','V'],skip=skip,step=5e4,rcut=False)
-    #sp.crystal_size_cube(L,VW.shape[0]/skip,VW.shape[1])
+
 ######################
 # FInd the solid particles in a simulation
 #####################
@@ -476,7 +411,7 @@ def end_end(M,L):
         for i in range(0,m.shape[1],2):
             edge[k] += points.dist(m[k][i],m[k][i+1],L[k])[0]
         edge[k]/=(m.shape[1]/2)
-    pyplot.plot(range(m.shape[0]),edge,save='polymer_length')
+    #pyplot.plot(range(m.shape[0]),edge,save='polymer_length')
     return edge
 
 
@@ -496,6 +431,7 @@ def run_():
     L_cont = M.box_volume()
     L_cont[-1] =L_cont[-2]
     last = M.frames
+    new = False
     try:
         V = util.pickle_load('V.pkl')
         if V.shape[0] != last:
@@ -504,6 +440,7 @@ def run_():
         #Z = util.pickle_load('Z.pkl')
     except:
         #V=M.cord_auto(['V','W'])
+        new = True
         V=M.cord_auto(['V'])
         if V.shape[1] < 1:
             V=M.cord_auto(['A'])
@@ -516,26 +453,65 @@ def run_():
         #dump_xyz(Z)
         util.pickle_dump(V,'V.pkl')
         #util.pickle_dump(Z,'Z.pkl')
-    x = []
-    #L_last = L_cont[0][0]
-    #for i,j in enumerate(L_cont):
-    #    if j[0] != L_last:
-    #        L_last = j[0]
-    #        if i - 5 > 0:
-    #            x.append(i-5)
-    #x.append(last-5)
+    x = [0]
+    L_last = L_cont[0][0]
+    count = 0
+    x_count = []
+    for i,j in enumerate(L_cont):
+        if j[0] != L_last:
+            L_last = j[0]
+            x.append(i)
+            x_count.append(count)
+            count=0
+        count+=1
+    x.append(len(L_cont))
+    x_count.append(count)
+    print x_count
+    print len(x)
+    print len(x_count)
+    for i in range(len(x_count)):
+        print i, x[i], x_count[i]
+        print 'xxx'
+    #get the frame to start based on rho
+    #for i in range(len(x)):
+    #    rho =  V.shape[1]/L_cont[x[i]][0]**3
+    #    if abs(rho-1.2)< .1 and x_count[i] > 5:
+    #        print rho
+    #        delta = 5
+    #        x_set = [x[i]+delta]
+    #        x_index = i
+    #sp4
+    #x_set = [21, 42,62,83, 103, 123, 144, 164, 184, 204]
+    #sp8
+    #x_set = [22,42,62,83,103,123]
+    #x_set = [450,820,1240,2050,2445,2862,3268,3674,4080,
+    #         4486,4892,5298,5704,6110] 
+    x_set = [400,840,1260,1640,2050,2460]
+    n_frames = 300
+    f = h5py.File('pmf_dist.hdf5','w')
+    for i in x_set:
+        if  i + n_frames <= V.shape[0]:
+            if L_cont[i] == L_cont[i+5]:
+                print "L = ",L_cont[i][0]
+                print "rho = ",V.shape[1]/L_cont[i][0]**3
+                print "frame = ", i 
+                PMF(f, V,L_cont[i],n_start=i,n_frames=n_frames)
+            else:
+                print "L is not the same reduce the n_frames"
+    f.close()
     #x = [20]
     #end_end(M,L_cont)
     #cubics(M,VW,L,var['ndna'])
     #rotations(V,Z,L_cont,'Z')
     #plt.close()
-    msd(V,L)
+    #if (os.path.isfile('msd.pkl') is False):
+    #    msd(V[10:],L)
     #plt.close()
     #delta = 25
     #x = range(0,V.shape[0],delta)
     #V = average_run(V,L_cont,10)
-    x = range(0,195,5)
-    x = [5]
+    #x = range(0,195,5)
+    #x = [5]
     #solid_particles_bcc(V,L_cont,x)
     #Q6Q4_map(V,L_cont,x,rcut=15.5*2**0.5)
     #solid_particles_sc(V,L_cont,x)
@@ -547,11 +523,13 @@ def run_():
     #distance_distribution(V,L_cont,x)
     #x = [4500]
     #print last
-    x = range(1,last-2,1)
-    #x = range(1,200,1)
-    if os.path.isfile('si_scat.pkl') is False:
-        self_intermediate_scattering(V, L_cont, x, 
-                n_start=1,calc=True,delta=5)
+    #x = range(0,last-2,1)
+    ##x = range(1,200,1)
+    #if (os.path.isfile('si_scat.pkl') is False) or new:
+    #    self_intermediate_scattering(V, L_cont, x,
+    #            n_start=1,calc=True,delta=5)
+    #else:
+    #    print 'skiping self_intermediate'
     #V = Average(V,L_cont,185,5)
     #x= [last-10]
     #for i in x:
@@ -565,20 +543,21 @@ def run_():
     #    plt.close()
 #For multiple directories
 #For multiple directories
-if __name__ == '__main__':
-    y = []
-    [y.append(x[0]) for x in os.walk(os.getcwd())]
-    del y[0]
-    print y
-    for directory in y:
-        if os.path.isdir(directory):
-            os.chdir(directory)
-            try:
-                run_()
-            except:
-                'directory failed',directory
-                pass
-            print '##\nfinished with:',directory
+#if __name__ == '__main__':
+#    y = []
+#    [y.append(x[0]) for x in os.walk(os.getcwd())]
+#    del y[0]
+#    for i in y:
+#        print i.split('/')[-1]
+#    for directory in y:
+#        if os.path.isdir(directory):
+#            os.chdir(directory)
+#            try:
+#                run_()
+#            except:
+#                'directory failed',directory
+#                pass
+#            print '##\nfinished with:',directory
 
 ###for single directories
 if __name__ == '__main__':

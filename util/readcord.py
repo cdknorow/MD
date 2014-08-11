@@ -33,6 +33,7 @@ class ReadCord():
         self.box_length_z = self.DCD.box_length_z
         self.num_particles = self.DCD.numatoms
         self.universe,self.num_particles=name_parse(self.num_particles,topology)
+        print self.num_particles,len(self.universe)
         #some info for parsing xyz file
     ########################
     #get the box size at each frame
@@ -98,7 +99,6 @@ class ReadCord():
         if get_index:
             print 'getting index'
             index = self.get_index(cord)
-            print index
         else:
             print 'getting universe'
             index = range(len(self.universe))
@@ -118,11 +118,11 @@ class ReadCord():
         if get_index:
             print 'getting index'
             index = self.get_index(cord)
-            print index
         else:
             print 'getting universe'
             index = range(len(self.universe))
         print 'finding positiosns'
+        print frames
         for i,frame in enumerate(frames):
             f = self.DCD.getframe(frame)
             count=0
@@ -143,6 +143,7 @@ class ReadCord():
     def cord_auto(self,cord):
         print 'Getting Cords',cord
         self.num_frames = self.frames
+        print 'total frames', self.num_frames
         self.matrix_xyz(cord=cord)
         self.get_cord(cord=cord,last=self.frames)
         return self.return_cords()
@@ -175,13 +176,10 @@ class ReadCord():
     #auto cord, note cord must be in the form ['X'] and not 'X'
     #also more than one cord can be passes ie ['X','G'..etc]
     ###########################################################
-    def all_cord_range(self, start=0, delta=1, last=1):
-        self.num_frames = (last-start)/delta
-        print 'number of frames'
-        print self.num_frames
-        print self.num_particles
+    def all_cord_range(self, rframes=[0]):
+        print 'frames',rframes
         print 'Getting Cords'
-        self.matrix_xyz(auto=False,num_frames=self.num_frames,num_cords=self.num_particles)
-        self.get_cord(last=last,start=start,delta=delta,get_index=False)
-        return self.return_cords()
+        self.matrix_xyz(auto=False,num_frames=len(rframes),num_cords=self.num_particles)
+        self.get_cord_frame(frames=rframes,get_index=False)
+        return self.return_cords(),self.universe
 

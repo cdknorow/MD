@@ -82,7 +82,7 @@ def plot(X, Y, linestyle='-', marker='', xlabel='x', ylabel='y',
     fig_size=params_square()
     fig1 = plt.figure()
     ax1 = fig1.add_subplot(111)
-    ax1.plot(x, y, marker=marker, linestyle=linestyle, label=label)
+    ax1.plot(x, y, linestyle, marker=marker, linestyle=linestyle, label=label)
     ax1.set_xlabel(xlabel)
     ax1.set_ylabel(ylabel)
     if logx:

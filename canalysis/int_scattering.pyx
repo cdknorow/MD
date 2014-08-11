@@ -138,7 +138,7 @@ def boundary_cross( np.ndarray[DTYPE_t, ndim=1] p1,
 #
 # F_s(k,t) is defined as 
 # \f{eqnarray*}
-# F_s(k,t) = 1/N\sum_{i=0}^N(<exp[ k dot (r(0)_{i}-r(t)_i)]>} 
+# F_s(k,t) = 1/N\sum_{i=0}^N(<exp[ i* k dot (r(0)_{i}-r(t)_i)]>} 
 # \f}
 #where k is the first peak of the structure facture S(q)
 # r vector of the particle and ri is ith particle in frame k. 
@@ -168,6 +168,7 @@ def int_scatter( np.ndarray  A, np.ndarray  L, np.ndarray  q, np.ndarray  x, int
             r = (A[x[0]][i][0:3] + Drift[k-1]) - (A[k][i][0:3] - B[i] * L)
             B[i] = boundary_cross(A[k][i], A[k+1][i], L/2., B[i])
             F[j] += cosf(np.dot(q,-r))
-        F[j] /= N
+        F[j] = abs(F[j])/N
+
     return F
 

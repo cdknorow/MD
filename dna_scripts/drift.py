@@ -13,6 +13,10 @@ def drift_remove_all(VW,V,W,L,step=5e4):
     VW = eliminate_drift(VW,L)
     return VW,V,W
     #Find the msd of the system
+def drift_remove(M,L,step=5e4):
+    from MD.analysis.drift_remove import eliminate_drift
+    return eliminate_drift(M,L)
+    #Find the msd of the system
 if __name__ == '__main__':
 #   #run_debug()
     #run_all()

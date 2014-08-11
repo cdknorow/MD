@@ -91,8 +91,8 @@ def write_qmap_xyz(VW,Q6,Q4,frame,rcut):
     # counter bcc, hcp, fcc, mrco, liqid
     counter = [0,0,0,0,0]
     fid = open('%s.q6q4.xyz'%frame,'w')
-    bcc_cut = .05
-    bcc = np.array([.45,.03 ])
+    bcc_cut = .055
+    bcc = np.array([.475,.03 ])
     hcp_cut = .035
     hcp = np.array([.475,.1 ])
     fcc_cut = .075
@@ -135,39 +135,39 @@ def write_qmap_xyz(VW,Q6,Q4,frame,rcut):
         if w[1] == True:
             fid.write(('H %.4f %.4f %.4f\n'%(VW[j][0],
                 VW[j][1],VW[j][2])))
-            Qx[0].append(Q4[j])
-            Qy[0].append(Q6[j])
+            Qx[1].append(Q4[j])
+            Qy[1].append(Q6[j])
         else:
             fid.write(('H %.4f %.4f %.4f\n'%(C[0],C[1],C[2])))
         if w[2] == True:
             fid.write(('F %.4f %.4f %.4f\n'%(VW[j][0],
                 VW[j][1],VW[j][2])))
-            Qx[0].append(Q4[j])
-            Qy[0].append(Q6[j])
+            Qx[2].append(Q4[j])
+            Qy[2].append(Q6[j])
         else:
             fid.write(('F %.4f %.4f %.4f\n'%(C[0],C[1],C[2])))
         if w[3] == True:
             fid.write(('L %.4f %.4f %.4f\n'%(VW[j][0],
                 VW[j][1],VW[j][2])))
-            Qx[0].append(Q4[j])
-            Qy[0].append(Q6[j])
+            Qx[3].append(Q4[j])
+            Qy[3].append(Q6[j])
         else:
             fid.write(('L %.4f %.4f %.4f\n'%(C[0],C[1],C[2])))
         if w[4] == True:
             fid.write(('I %.4f %.4f %.4f\n'%(VW[j][0],
                 VW[j][1],VW[j][2])))
-            Qx[0].append(Q4[j])
-            Qy[0].append(Q6[j])
+            Qx[4].append(Q4[j])
+            Qy[4].append(Q6[j])
         else:
             fid.write(('I %.4f %.4f %.4f\n'%(C[0],C[1],C[2])))
     xlabel = 'q4_avg'
     ylabel = 'q6_avg'
     Label = ['bcc','hcp','fcc','liq','int']
-    pyplot.plot_multi(Qx,Qy,Label,
-            xlabel=xlabel,ylabel=ylabel,save=('Qmap_frame%i_rcut%.2f'%(frame,rcut)),
-            limx=(0,.2),limy=(0,.6),make_marker=True)
+    #pyplot.plot_multi(Qx,Qy,Label,
+    #        xlabel=xlabel,ylabel=ylabel,save=('Qmap_frame%i_rcut%.2f'%(frame,rcut)),
+    #        limx=(0,.2),limy=(0,.6),make_marker=True)
     fid.close()
-    return counter
+    return counter, [Qx,Qy]
 
 def _run(rcut, delta=5):
     home = os.getcwd()
@@ -205,10 +205,12 @@ def _run(rcut, delta=5):
         '''
         return [ atoi(c) for c in re.split('(\d+)', text) ]
     dirs.sort(key=natural_keys)
+    Qtotal = []
     for f in dirs:
         if f[0:3] == 'con':
             VW,Q4,Q6 = read_q6q4(f)
-            counter = write_qmap_xyz(VW,Q6,Q4,float(f.split('.')[1]),rcut)
+            counter,q = write_qmap_xyz(VW,Q6,Q4,float(f.split('.')[1]),rcut)
+            Qtotal.append(q)
             for i in range(len(crystals)):
                 crystals[i].append(counter[i])
     os.system(('cat $(find ./ -name "*.q6q4.xyz" | sort -V) > q6q4_all_rcut%.2f.xyz'%rcut))
@@ -226,8 +228,10 @@ def _run(rcut, delta=5):
         fid.write(('%i %i %i %i %i %i\n'%(i, crystals[0][i], crystals[1][i],
             crystals[2][i], crystals[3][i], crystals[4][i])))
     fid.close()
-    pyplot.plot_multi(x,crystals,Label,
-            xlabel='time',ylabel='crystal count',save=('crystals_rcut%.2f'%(rcut)))
+    import pickle
+    pickle.dump(Qtotal,open('Qtotal.pkl','w'))
+    #pyplot.plot_multi(x,crystals,Label,
+    #        xlabel='time',ylabel='crystal count',save=('crystals_rcut%.2f'%(rcut)))
 #input delta sort
 if __name__ == "__main__":
     rcut = float(sys.argv[1])

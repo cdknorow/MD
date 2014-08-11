@@ -21,14 +21,6 @@ from MD.plot.histogram import histogram_normal
 from MD.plot.histogram import histogram_reg
 from MD.analysis.rotation import single_rotation_box
 
-
-
-
-
-
-
-
-
 #####################################################
 # Find Static Structure Facto
 ##S is sf peaks with the noise removed

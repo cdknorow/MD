@@ -147,6 +147,17 @@ def connections(M):
         del con[-1]
         util.pickle_dump(con,'conn.pkl')
         return con
+######################
+# FInd the solid particles in a simulation
+#####################
+def Q6Q4_map(VW,L,x,step=5e4,rcut=False):
+    import MD.dna_scripts.solidparticle as sp
+    reload(sp)
+    sp.q6q4_fast_map(VW,L,x,step=5e4,avg=5,rcut=rcut)
+    #sp.crystal_size(L,VW.shape[0]/skip,VW.shape[1])
+    #if os.path.exists('sccrystals.xyz') == False:
+    #    sp.solid_particles_VW(VW,L,['V','V'],skip=skip,step=5e4,rcut=False)
+    #sp.crystal_size_cube(L,VW.shape[0]/skip,VW.shape[1])
 ############################################
 ## \brief Find average <u(o)*u(t)> = exp(2Dt)
 #
@@ -174,6 +185,84 @@ def rotation_diffusion_split(Z,VW,L,t0):
     #write ot the ddiffusion coeffiecnent for each t0
     pyplot.plot(x,sum_t,label='theta',
           save='cube_total_rotation_split%i'%i,showleg=True)
+############################################
+##  g(r)
+############################################
+def distance_distribution_bakos(V,L,x,smooth=1):
+    #finds end to end distances and plots a histogram with that data
+    def bakos_dist(M,N,L,rcut = 30):
+        distance =[]
+        print L
+        for i in range(M.shape[0]):
+            for j in range(N.shape[0]):
+                distance.append(points.dist(M[i],N[j],L)[0])
+                if distance[-1] > rcut or distance[-1]<1:
+                    del distance[-1]
+        return distance
+    def hist(distance):
+        hist_s,xs,max_hist=histogram_normal(np.array(distance),bins=np.arange(5,30,0.05))
+        #hist_s,xs,max_hist=histogram_normal(np.array(distance),bins=30)
+        #normalize the function with respect to an ideal gas
+        return xs,hist_s
+    ########################################
+    #Plot Data for AA,AB,BB distances
+    AA = []
+    AB = []
+    AC = []
+    AD = []
+    for frame in x:
+        save_name='_time_'+'%i'%(frame)
+        max_hist=0
+        fid = open('animate/bakos_index%i.txt'%frame,'r')
+        M = fid.readlines()
+        A =[]
+        B = []
+        C = []
+        D = []
+        for i,line in enumerate(M):
+            if int(line) == 1:
+                A.append(V[frame][i])
+            if int(line) == 2:
+                B.append(V[frame][i])
+            if int(line) == 3:
+                C.append(V[frame][i])
+            if int(line) == 0:
+                D.append(V[frame][i])
+
+        A = np.array(A)
+        B = np.array(B)
+        C = np.array(C)
+        D = np.array(D)
+
+        AA.extend(bakos_dist(A,A,L[frame]))
+        AB.extend(bakos_dist(A,B,L[frame]))
+        AC.extend(bakos_dist(A,C,L[frame]))
+        AD.extend(bakos_dist(A,D,L[frame]))
+    print "neigbors for AA"
+    print len(AA)
+    print "neigbors for AB"
+    print len(AB)
+    print "neigbors for AC"
+    print len(AC)
+    print "neigbors for AD"
+    print len(AD)
+    AAtotal = hist(AA)
+    ABtotal = hist(AB)
+    ACtotal = hist(AC)
+    ADtotal = hist(AD)
+    fid = open('nnbakos.txt','w')
+    for i in range(AAtotal[0].shape[0]):
+        fid.write('%.3f %.6f %.6f %.6f %.6f\n'%
+                (AAtotal[0][i],AAtotal[1][i],ABtotal[1][i],ACtotal[1][i],ADtotal[1][i]))
+    fid.close()
+
+
+
+    pyplot.plot4(AAtotal[0],AAtotal[1],ABtotal[0],ABtotal[1],ACtotal[0],ACtotal[1],ADtotal[0],ADtotal[1],xlabel='s',ylabel='g(s)',save='nnplot_'+save_name,
+            label1='A-A',label2='A-B',label3='A-C',label4='A-D',showleg=True)
+    #pyplot.plot(AB[0],AB[1],xlabel='s',ylabel='g(s)',save='nnplot_'+save_name)
+    #pyplot.plot(AC[0],AC[1],xlabel='s',ylabel='g(s)',save='nnplot_'+save_name)
+    #pyplot.plot(AD[0],AD[1],xlabel='s',ylabel='g(s)',save='nnplot_'+save_name)
 ## \brief find the largest cubic a cube belongs too
 #
 # \returns x,y values of histogram (corners, number at corners))

@@ -5,7 +5,6 @@
 # particles
 
 import numpy as np
-from MD.base.points import dist
 
 # \brief find the distances between Points in Two arrarys arrays must have same
 # elements 
@@ -16,14 +15,25 @@ from MD.base.points import dist
 # \param B matrix of B points for a B[atoms][x,y,z]
 # \param L lenght of box 
 def particle_distance(A,B,L):
-    d=np.zeros((A.shape[0]*A.shape[1]*B.shape[1],1))
-    count=0
+    d = np.zeros(A.shape[0]*A.shape[1]*A.shape[1])
+    counter = 0
     for i in range(A.shape[0]):
         for j in range(A.shape[1]):
-            for k in range(B.shape[1]):
-                d[count] = dist(A[i][j],B[i][k],L)[0]
-                count+=1
+            r = np.abs(B[i] - A[i][j])
+            r = np.where(r > L[0]/2, L[0] - r, r)
+            d[counter:counter+A.shape[1]] = np.sqrt((r**2).sum(axis=-1))
+            counter += A.shape[1]
     return d
+
+#def particle_distance(A,B,L,rmax=1000):
+#    d = []
+#    for i in range(A.shape[0]):
+#        for j in range(A.shape[1]):
+#            for k in range(B.shape[1]):
+#                r = dist(A[i][j],B[i][k],L)[0]
+#                if r > 0 and r < rmax:
+#                    d.append(r)
+#    return d
 
 # \brief attempts to find the first peak of a distance distribution
 #
@@ -67,8 +77,21 @@ def min_particle_distance(A,B,L,cut=10,verbose=False):
 # \param L lenght of box 
 def min_point_distance(P,B,L):
     small = 100
+    index = 0
     for i in range(B.shape[0]):
-        d = dist(P,B[i],L)[0]
-        if d < small:
-            small = d
-    return small
+        d = dist(P,B[i],L)
+        if d[0] < small:
+            small = d[0]
+            vector = d[1] 
+            index = i
+    return small,vector,index
+
+
+if __name__ == '__main__':
+    A = np.zeros((1,5,3))
+    A[0][1] += 1 
+    A[0][2] += 1 
+    A[0][3] += -5 
+    A[0][4] += 5 
+    print A
+    print particle_distance(A, A,[10,10,10])

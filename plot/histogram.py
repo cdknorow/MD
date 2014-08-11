@@ -51,7 +51,7 @@ def histogram_normal(distance,bins,max_hist=0,end=1):
     bin2=[]
     hist2=[]
     for i in range(len(bins)-end):
-        bin2.append(bins[i+1])
+        bin2.append((bins[i+1]+bins[i])/2)
         hist2.append(hist[i])
     bins=np.array(bin2)
     hist=np.array(hist2)

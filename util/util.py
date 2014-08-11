@@ -105,6 +105,7 @@ def dcd_to_xyz(always=False,first=1):
             print "error no XYZ.txt file created"
             print "error no XYZ.txt file created"
 
+
 #################################################################
 ##print cordinates in xyz format
 #################################################################
@@ -119,6 +120,21 @@ def print_xyz(M,L,atoms=54,save='xyz.dat'):
     for i in M:
         fid.write('%.6f %.6f %.6f\n'%(i[0]+L/2,i[1]+L/2,i[2]+L/2))
     fid.close()
+#################################################################
+##print cordinates in xyz format
+#################################################################
+def print_imd(M,L,k,save='dat'):
+    fid = open(save+'%i'%k+'.imd','w')
+    fid.write('#F A 1 0 0 3 0 0\n') 
+    fid.write('#C number x y z\n')
+    fid.write('#X %.7f 0 0\n'%L[k][0])
+    fid.write('#Y 0 %.7f 0\n'%L[k][1])
+    fid.write('#Z 0 0 %.7f 0\n'%L[k][2])
+    fid.write('#E number x y z\n')
+    for N,i in enumerate(M[0]):
+        fid.write('%i %.6f %.6f %.6f\n'%(N,
+            i[0]+L[k][0]/2,i[1]+L[k][1]/2,i[2]+L[k][2]/2))
+    fid.close()
 ######################
 # export data for matlab
 ######################
@@ -128,15 +144,29 @@ def matlab_out(x,y,name='data1'):
         fid.write(('%.4f %.4f\n')%(x[i],y[i]))
     fid.close()
 #load and unload pickle files
+def marshal_load(f):
+    print 'loading pickle',f
+    import marshal as pickle
+    fid = open(f,'rb')
+    S=pickle.load(fid)
+    fid.close()
+    return S
+def marshal_dump(x,f):
+    import marshal as pickle
+    output = open(f,'wb')
+    S=pickle.dump(x,output)
+    output.close()
+    return S
+#load and unload pickle files
 def pickle_load(f):
     print 'loading pickle',f
-    import pickle
+    import cPickle as pickle
     fid = open(f,'rb')
     S=pickle.load(fid)
     fid.close()
     return S
 def pickle_dump(x,f):
-    import pickle
+    import cPickle as pickle
     output = open(f,'wb')
     S=pickle.dump(x,output)
     output.close()

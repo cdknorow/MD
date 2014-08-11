@@ -476,30 +476,33 @@ def run_single():
     Lz = M.box_length_z
     L = np.array([Lx, Ly, Lz])
     L_cont = M.box_volume()
-    L_cont[-1] = L_cont[-2]
-    print_box_volume(L_cont,delta=delta)
+    #L_cont[-1] = L_cont[-2]
+    #print L_cont
+    print_box_volume(L_cont,delta=1)
     last = M.frames
     V_index = M.get_index(['V'])
     W_index = M.get_index(['W'])
-    try:
-        VW = util.pickle_load('VW.pkl')
-    except:
-         VW=M.cord_auto(['V','W'])
-         util.pickle_dump(VW,'VW.pkl')
+    VW=M.cord_auto(['V','W'])
+    print VW
+    #try:
+    #    VW = util.pickle_load('V.pkl')
+    #except:
+    #     VW=M.cord_auto(['V','W'])
+    #     util.pickle_dump(VW,'VW.pkl')
     #Find the msd of the system
     #VW = drift_remove(VW,L)
     dump_xyz(VW)
-    x = []
-    L_last = L_cont[0][0]
-    count = 0
-    for i,j in enumerate(L_cont):
-        if j[0] != L_last:
-            L_last = j[0]
-            if i - 5 > 0:
-                count +=1
-                if count%3 == 0:
-                    x.append(i-5)
-    x.append(last-5)
+    #x = []
+    #L_last = L_cont[0][0]
+    #count = 0
+    #for i,j in enumerate(L_cont):
+    #    if j[0] != L_last:
+    #        L_last = j[0]
+    #        if i - 5 > 0:
+    #            count +=1
+    #            if count%3 == 0:
+    #                x.append(i-5)
+    #x.append(last-5)
     #x.append(last)
     #a = 500
     #print x
@@ -532,7 +535,7 @@ def run_single():
     #######################
     ######################
     #msd(VW,L_cont[0],step=1)
-    import MD.analysis.cubatic_order as c
+    #import MD.analysis.cubatic_order as c
     #polymer_end_vs_lattice(M,VW, L_cont, x)
     #polymer_interpenetrate(M,VW, Z,L_cont,x)
     #polymer_azimuth(M,VW, Z,L_cont, x)
@@ -578,11 +581,11 @@ def run_compress():
     last = M.frames
     V_index = M.get_index(['V'])
     W_index = M.get_index(['W'])
-    try:
-        VW = util.pickle_load('VW.pkl')
-    except:
-         VW=M.cord_auto(['V','W'])
-         util.pickle_dump(VW,'VW.pkl')
+    #try:
+    #    VW = util.pickle_load('VW.pkl')
+    #except:
+    #     VW=M.cord_auto(['V','W'])
+    #     util.pickle_dump(VW,'VW.pkl')
     x = [0]
     count = 1
     lcut = 0
@@ -611,7 +614,24 @@ def run_compress():
     print x
     print L_length
     msd_compress(VW,L_cont,x,step=1)
+
+#For multiple directories
+#if __name__ == '__main__':
+#    y = []
+#    [y.append(x[0]) for x in os.walk(os.getcwd())]
+#    del y[0]
+#    for i in y:
+#        print i.split('/')[-1]
+#    for directory in y:
+#        if os.path.isdir(directory):
+#            os.chdir(directory)
+#            try:
+#                run_single()
+#            except:
+#                'directory failed',directory
+#                pass
+#            print '##\nfinished with:',directory
+
 if __name__ == '__main__':
     run_single()
-    #run_compress()
-
+#    #run_compress()
