@@ -45,6 +45,30 @@ def get_box_size():
     L=float(L.split()[1].split('"')[1])
     return L
 #######################################
+#get the steps where the box shrings
+#######################################
+def get_box_size_steps(L_cont):
+        x = [0]
+        L_last = L_cont[0][0]
+        count = 0
+        x_count = []
+        for i,j in enumerate(L_cont):
+            if j[0] != L_last:
+                L_last = j[0]
+                x.append(i)
+                x_count.append(count)
+                count=0
+            count+=1
+        x.append(len(L_cont))
+        x_count.append(count)
+        print x_count
+        print len(x)
+        print len(x_count)
+        for i in range(len(x_count)):
+            print i, x[i], x_count[i]
+            print 'xxx'
+        return x, x_count
+#######################################
 #returns the temp from mylog.log
 #######################################
 def get_temp():
