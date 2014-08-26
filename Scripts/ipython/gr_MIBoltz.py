@@ -18,8 +18,18 @@ for i in os.listdir('.'):
     if i[:5] == 'hist_':
         hist_num+=1
 nruns = len(os.listdir('histogram/'))
-choose = [0,nruns/hist_num-1]
+choose = [nruns/hist_num-1]
 #hoose = range(20)
+
+def Smooth(M):
+    #Find the max
+    for i in range(5):
+        M_new = []
+        for i in range(len(M)-1):
+            M_new.append((M[i-1]+M[i]+M[i+1])/3.)
+        M_new.append(M[-1])
+        M = M_new
+    return np.array(M_new)
 
 def get_plot():
     fig1 = plt.figure(figsize=(20,8), dpi=100)
@@ -43,6 +53,9 @@ def radial_plots(ax1):
                     if line[0] != '#':
                         r.append(float(line.split()[0]))
                         dist.append(float(line.split()[1]))
+                    else:
+                        if line[1] != 'r':
+                            print 'L=',line.split()[3]
                 fid.close()
                 if big:
                     ax1.plot(r,dist,colors[counter],lw='3',label=hist_file[1][14:])
@@ -82,6 +95,9 @@ def full_radial_plots(ax1,big=False):
                 dist = []
                 r = []
                 #Get Distances
+                if big:
+                    fid.readline()
+                    fid.readline()
                 for line in fid.readlines():
                     dist.append(float(line.split()[1]))
                     r.append(float(line.split()[0]))
@@ -99,9 +115,9 @@ def full_radial_plots(ax1,big=False):
     make_plots(order)
     order = []
     counter = 0
-    for hist_file in sorted(os.listdir('../../')):
+    for hist_file in sorted(os.listdir('../')):
         if hist_file[:16] == 'full_hist_target':
-            order.append([counter,'../../'+hist_file])
+            order.append([counter,'../'+hist_file])
             counter+=1
     make_plots(sorted(order),big=True)
     os.chdir('../')
@@ -115,7 +131,6 @@ def potential_plots(ax1):
     count = 0
     for hist_file in order:
         if count in choose:
-            print count
             fid = open(hist_file[1],'r')
             F = []
             V = []
@@ -128,16 +143,36 @@ def potential_plots(ax1):
                 r.append(float(line.split()[0]))
             fid.close()
             ax1.plot(r,V,'x-',label=hist_file[1])
+            ax1.plot(r,Smooth(V),'x-',label=hist_file[1])
             #ax1.plot(r,-np.gradient(V,r[1]-r[0]),'x-',label=hist_file[1]+'grad')
             ax1.set_xlim(r[0],r[-1])
         count+=1
     os.chdir('../')
     #epsilon = 1.0 
-    #sigma = 11.8
-    #p=9.2
-    #V=[]
-    #for r in np.linspace(rmin,rmax,300):
+    #sigma = 10.5+3.03
+    #p=13
+    #l_c = .99
+    epsilon = 1.0
+    sigma = 10.5+1.80
+    p=10.
+    l_c = 1.075
+    #epsilon = 1.0
+    #sigma = 10.5+8.75
+    #p=11.75
+    #l_c = 1.04
+    # epsilon = 1.0
+    # sigma = 10.5+8.5
+    # p=11.75
+    # l_c = 1.00
+    V=[]
+    for r_x in r:
     #    V.append(  epsilon * ( 1 / (np.sinh((r/sigma))**p)))
+         V.append(epsilon*(sigma/(r_x-sigma/l_c))*np.exp(-(r_x/sigma)**p))
+         #V.append(  epsilon * ( (sigma / r)**12))
+    dt = 60
+    #peos.rexp_Potential_fit(ax1, np.array(r[dt:-dt]), np.array(V[dt:-dt]),
+    #        sigma=17,p=10,epsilon=1,l_c=1,show=True,umin=6)
+    ax1.plot(r,V)
     plt.legend(loc=1)
 
 if __name__ == "__main__":
@@ -145,7 +180,7 @@ if __name__ == "__main__":
     rmin=6
     rmax=20
     radial_plots(ax1)
-    plt.legend(loc='upper right')
+    #plt.legend(loc='upper right')
     if False:
         ax1 = get_plot()
         full_radial_plots(ax1)
@@ -160,10 +195,12 @@ if __name__ == "__main__":
         #ax1.set_ylim(0,3.5)
         #plt.legend(loc='upper right')
         #plt.show()
+        potential_plots(ax1)
+        ax1.set_ylim(.01,5)
         potential_plots(ax2)
         ax2.set_yscale('log')
         #ax1.set_ylim(.01,200)
-        ax2.set_ylim(.01,15)
+        ax2.set_ylim(.01,50)
     plt.show()
 
 

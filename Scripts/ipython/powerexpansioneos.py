@@ -145,15 +145,16 @@ def exp_Potential_fit(ax1,r, U,sigma=20,p=12,epsilon=1,l_c=1,show=False,umin=6):
                 return i
     def coeff(r, sigma, p, l_c=1):
         espilon=1.0
-        B = epsilon*np.exp(-(r/sigma)**p)
+        B = epsilon*(sigma/r)*np.exp(-(r/sigma)**p)
         return B
     xmin_index= findindex(r)
     xmin_index = 0
     popt, pcov = curve_fit(coeff, r[xmin_index:], U[xmin_index:], p0 = [sigma,
         p], maxfev=100000)
     if show:
-        xmax = r[0]
-        xmin = r[-1]
+        xmax = r[-1]
+        xmin = r[0]
+        print xmax
         print 'sigma= %f p=%f '%(popt[0], popt[1])
         x = np.linspace(xmin,xmax,100)
         ax1.plot(x,coeff(x,popt[0],popt[1]),'-k',label='fit')

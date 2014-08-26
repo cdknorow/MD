@@ -63,6 +63,41 @@ def polymer_end_2_end(M, L, frames ):
         dset.attrs.create("n_frames",delta)
     hpy.close()
 
+#\brief find the polymer strething distances
+def polymer_end_2_end(M, L, frames ):
+    hpy = h5py.File('polymer_stetching.hdf5','w')
+    delta = 1
+
+    P = M.cord_frames(['M'],frames)
+    V = M.cord_frames(['V'],frames)
+    polymers = P.shape[1]/(2*V.shape[1])
+
+    for count, k in enumerate(frames):
+        counter = 0
+        ps2pe = np.zeros(V.shape[1]*polymers)
+        c2pe = np.zeros(V.shape[1]*polymers)
+        c2ps = np.zeros(V.shape[1]*polymers)
+        for i in range(V.shape[1]):
+            for j in range(0,2*polymers,2):
+                ps2pe[counter] = points.dist(P[count][i*(2*polymers)+j],P[count][i*(2*polymers)+j+1],L[k])[0]
+                c2ps[counter] = points.dist(V[count][i],P[count][i*(2*polymers)+j],L[k])[0]
+                c2pe[counter] = points.dist(V[count][i],P[count][i*(2*polymers)+j+1],L[k])[0]
+                counter+=1
+
+        dset = hpy.create_dataset("%ips2pe"%k, data = ps2pe)
+        dset.attrs.create("N_atoms",V.shape[1]*polymers)
+        dset.attrs.create("L",L[k][0])
+        dset.attrs.create("n_frames",delta)
+        dset = hpy.create_dataset("%ic2ps"%k, data = c2ps)
+        dset.attrs.create("N_atoms",V.shape[1]*polymers)
+        dset.attrs.create("L",L[k][0])
+        dset.attrs.create("n_frames",delta)
+        dset = hpy.create_dataset("%ic2pe"%k, data = c2pe)
+        dset.attrs.create("N_atoms",V.shape[1]*polymers)
+        dset.attrs.create("L",L[k][0])
+        dset.attrs.create("n_frames",delta)
+    hpy.close()
+
 
 #
 # NP = nanoparticles to use

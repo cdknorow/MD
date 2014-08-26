@@ -61,6 +61,12 @@ def potential_mean_field(ax1, title, xmin=0,xmax=8,delta=1):
         rmax=23.51
         zero_cut = 20.5
         bin_num=50
+    #Au sp3 ndna 50
+    if xmax == 3:
+        rmin=11
+        rmax=17
+        zero_cut = 15
+        bin_num=50
     #NP
     if xmax == 4:
         rmin=6
