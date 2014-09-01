@@ -45,6 +45,7 @@ def Average(VW,n_start,n_frames,L):
         fid.write(('V %.2f %.2f %.2f\n'%(Average[i][0],Average[i][1],Average[i][2])))
     fid.close()
     return Average
+    
 def crystal_size(L,num_frames,num_particles,rcut=15):
     #load all crystal positions
     num_frames = 777

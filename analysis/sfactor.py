@@ -53,6 +53,7 @@ def sfactor(B,L,l=10):
                 stmp[i,j,:]+=do_row(q,B[f][:])/B.shape[0]
     return stmp,qx
 
+
 ## \brief Sort the 3D peaks of the strucure factor
 #
 # \returns S(q), mag(q), q vectors
@@ -76,6 +77,7 @@ def sort_sfpeaks(stmp,qx):
                 #keep track of S and q components
                 Q.append(q)
     return S,Q,primitive_vectors
+
 
 ## \brief Filters out S(q) values which are below a certain level.
 #
@@ -102,6 +104,7 @@ def sf_filter(Q,S,primitive_vectors,filters=0.05,save='sf'):
         fid.write('%f\n'%WQ[i])
     fid.close()
     return QQ,SS,PM
+
 ## \brief Find where sf values should be for bcc.
 #
 # \returns bars x value, height of bars.
@@ -195,17 +198,7 @@ def recipricol(QQ,PM):
     b1 = b[int(raw_input('enter value 1?  '))]
     b2 = b[int(raw_input('enter value 2?  '))]
     b3 = b[int(raw_input('enter value 3?  '))]
-    #for i in b:
-    #    print i,"\n"
-    #b1=b[0]
-    #for i in b:
-    #    if i!=b1:
-    #        b2=i
-    #        break
-    #for i in b:
-    #    if i!=b1 and i!=b2:
-    #        b3=i
-    #        break
+
     print "Found b1, b2, b3!"
     print b1,"\n", b2,"\n",b3
     den=np.dot(b1,np.cross(b2,b3))

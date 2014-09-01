@@ -2,6 +2,11 @@ import numpy as np
 import os
 import MD.base.points as points
 
+## \brief get the average position of particles
+#
+# \return average position of particles over time
+#
+# \param M a group of atoms in matrix form [frames][atoms][x,y,z]
 
 def average_position(M):
     A = np.zeros((M.shape[1],3))

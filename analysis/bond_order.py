@@ -126,6 +126,7 @@ def QmapFast(M,L,count=14,crystal=6,verbose=False,rcut=30):
         Ql6[i]=ql(qlm_avg,l)
     print 'Ql6=',l,Ql6.sum()/Ql6.shape[0]
     return Ql4,Ql6
+
 ## \brief Uses spherical harmonics to identify solid particles 
 # a specfic frame.
 #
@@ -137,7 +138,6 @@ def QmapFast(M,L,count=14,crystal=6,verbose=False,rcut=30):
 # \param l bond order,6 for bcc, 4 for simple cubic 
 # \param c_cut crystal value cutoff for identifying solid particle
 # \param crystal number of surrounding crystal particles to call a particle a crystal 
-#############################
 def solid_particles(M,L,count=14,l=6,c_cut=0.15,crystal=6,verbose=False,rcut=30):
     #Find nearest neighbors for all particles and convert to spherical
     #######
@@ -192,6 +192,7 @@ def solid_particles(M,L,count=14,l=6,c_cut=0.15,crystal=6,verbose=False,rcut=30)
     num=iscrystal.count(1)
     print 'crystals',num
     return num, iscrystal
+
 ## \brief Calculates Steihardt order parameters  
 #
 # \return num steihard order parameter for particles

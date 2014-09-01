@@ -31,7 +31,7 @@ def cm_boundary(x,L,applied = False):
     return x,applied
 
 ##\internal
-# \briefcorrect for the cm_boundary
+# \brief correct for the cm_boundary
 def reset_boundary(x,L,applied):
     if x>0:
         x=x-L/2.0

@@ -148,14 +148,17 @@ def potential_plots(ax1):
             ax1.set_xlim(r[0],r[-1])
         count+=1
     os.chdir('../')
-    #epsilon = 1.0 
-    #sigma = 10.5+3.03
-    #p=13
-    #l_c = .99
-    epsilon = 1.0
-    sigma = 10.5+1.80
-    p=10.
-    l_c = 1.075
+    #ndna 200 sp3
+    # epsilon = 1.0 
+    # sigma = 10.5+3.13
+    # p=14.5
+    # l_c = 1.0
+    #ndna 50 sp3
+    # epsilon = 1.0
+    # sigma = 10.5+1.82
+    # p=10.5
+    # l_c = 1.15
+    #ndna 200 sp8
     #epsilon = 1.0
     #sigma = 10.5+8.75
     #p=11.75
@@ -164,15 +167,36 @@ def potential_plots(ax1):
     # sigma = 10.5+8.5
     # p=11.75
     # l_c = 1.00
+    #Grafted Polymer sp=4
+    # epsilon = 1.0 
+    # sigma = 5+3.7
+    # p=8.5
+    # l_c = 1.275
+    #Grafted Polymer sp=8
+    # epsilon = 1.0 
+    # sigma = 5+7.
+    # p=10.75
+    # l_c = 1.42
+    epsilon = 1.0 
+    sigma = 5+9
+    p=14
+    n=12
+    l_c = 1.42
+
     V=[]
     for r_x in r:
-    #    V.append(  epsilon * ( 1 / (np.sinh((r/sigma))**p)))
-         V.append(epsilon*(sigma/(r_x-sigma/l_c))*np.exp(-(r_x/sigma)**p))
+         #V.append(  epsilon * ( 1 / (np.sinh((r_x/sigma))**p)))
+         #V.append(epsilon*(sigma/(r_x-sigma/l_c))*np.exp(-(r_x/sigma)**p))
+         #V.append(epsilon*(sigma/(r_x))**n*np.exp(-(r_x/sigma)**p))
+         V.append(epsilon*(sigma/(r_x))**n + math.log(r_x/sigma))
+         #V.append(epsilon*np.exp(-(r_x/sigma)**p))
+         #V.append(epsilon*np.exp(-((r_x/sigma)**2)))
          #V.append(  epsilon * ( (sigma / r)**12))
     dt = 60
     #peos.rexp_Potential_fit(ax1, np.array(r[dt:-dt]), np.array(V[dt:-dt]),
     #        sigma=17,p=10,epsilon=1,l_c=1,show=True,umin=6)
     ax1.plot(r,V)
+    print "Sigma:",sigma," p: ", p, " l_c: ", l_c
     plt.legend(loc=1)
 
 if __name__ == "__main__":

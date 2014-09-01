@@ -99,8 +99,8 @@ def full_radial_plots(ax1):
 
 if __name__ == "__main__":
     ax1,ax2 = get_plot()
-    rmin = 13
-    rmax = 18
+    rmin = 5
+    rmax = 17
     radial_plots(ax1)
     #plt.legend(loc='upper right')
     if True:

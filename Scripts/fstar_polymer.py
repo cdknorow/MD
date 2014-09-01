@@ -137,7 +137,7 @@ def draw_polymer(M,L, frames,NP=[1,2], rcut=1.0, step=5e4):
 
 # dcd
 #################################################
-def run_single():
+def run_():
     dirname = os.getcwd().partition('/')[-1]
     print "Starting:",dirname.split('/')[-1]
     #initial file
@@ -152,7 +152,14 @@ def run_single():
     L_cont = M.box_volume()
     last = M.frames
     x, xcount = util.get_box_size_steps(L_cont)
-    polymer_end_2_end(M, L_cont, [50,70,90,110,130])
+    x_set = []
+    n_frames = []
+    for i in range(len(xcount)):
+        if xcount[i] > 10:
+            x_set.append(x[i]+10)
+            n_frames.append(xcount[i]-10)
+    print x_set
+    polymer_end_2_end(M, L_cont, x_set)
 
 #For multiple directories
 #if __name__ == '__main__':
@@ -171,6 +178,13 @@ def run_single():
 #                pass
 #            print '##\nfinished with:',directory
 
-if __name__ == '__main__':
-    run_single()
+# if __name__ == '__main__':
+#     run_single()
 #    #run_compress()
+if __name__ == '__main__':
+   for f in sorted(os.listdir(os.getcwd())):
+       if os.path.isdir(f):
+           os.chdir(f)
+           run_()
+           print '##\nfinished with:',f
+           os.chdir('../')

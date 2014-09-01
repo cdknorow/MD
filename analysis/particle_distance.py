@@ -25,16 +25,6 @@ def particle_distance(A,B,L):
             counter += A.shape[1]
     return d
 
-#def particle_distance(A,B,L,rmax=1000):
-#    d = []
-#    for i in range(A.shape[0]):
-#        for j in range(A.shape[1]):
-#            for k in range(B.shape[1]):
-#                r = dist(A[i][j],B[i][k],L)[0]
-#                if r > 0 and r < rmax:
-#                    d.append(r)
-#    return d
-
 # \brief attempts to find the first peak of a distance distribution
 #
 # \returns first peak it finds 

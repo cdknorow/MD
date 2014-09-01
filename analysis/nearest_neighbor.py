@@ -189,7 +189,8 @@ def min_distance(A1,A2,L):
                 side1 = i
                 side2 = j
     return side1,side2
-## \brief Calculates the nearest neighbors to single particle.
+
+## \brief Calculates the second nearest neighbors to single particle.
 # 
 # \returns index of nearest neighbors
 # \returns vectors to nearest neighbors
@@ -214,6 +215,7 @@ def second_nearest_neighbors_index(M,index,L,inrcut=20, outrcut=40):
     if neighbors == []:
         print "error No neighbors were found try reducing rcut"
     return neighbors, vectors
+
 ## \brief finds the closest neighbors to a point x,y,z
 # 
 # \returns index of nearest neighbor
@@ -291,6 +293,7 @@ def nn_tree_index(M,index,otree,L,rcut=20):
     if neighbors == []:
         print "error No neighbors were found try reducing rcut"
     return neighbors, vectors
+
 ## \brief Finds x number of neighbors to single particle.
 # 
 # \returns index of nearest neighbors
@@ -319,7 +322,5 @@ def cn_tree_index(M,index,otree,L,count=8,rcut=20):
             neighbors.append(N[i][1])
     vectors = vector(M[index],M[neighbors],L)
 
-    #print 'Max,Min,Average'
-    #print max(D),min(D),max(D)/len(D)
 
     return neighbors,vectors

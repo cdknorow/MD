@@ -3,7 +3,12 @@ import sys
 import numpy as np
 import MD.base.points as points
 
-
+#\internal
+#
+#\brief generates an octree for fast nearest neighbor identification
+#
+#\param L - box size
+#\param delta - divide L into delta boxes 
 class node():
     def __init__(self,L,delta=4):
         #initialize the box
@@ -19,11 +24,16 @@ class node():
             for j in range(len(self.box)):
                 if points.dist(self.box[i][0],self.box[j][0],L)[0] <= 3**0.5*delta:
                     self.box[i][1].append(j)
-    #reset teh box particles
+    #\internal
+    #
+    #\brief  reset teh box particles
     def clear_particles(self):
         for i in range(self.box):
             self.box[i][2] = []
-    #add the particles to their boxes
+    #\internal
+    #\brief add the particles to their boxes
+    #
+    #\param M Numpy array containt particle positions
     def add_particles(self,M):
         self.particle_list = np.zeros((M.shape[0]))
         for i in range(M.shape[0]):
@@ -36,7 +46,8 @@ class node():
                     dsmall = d
             self.box[index][2].append(i)
             self.particle_list[i] = int(index)
-    #return the index of the particles in neighbor boxes
+    #\internal
+    #\brief return the index of the particles in neighbor boxes
     def get_particle_neighbors(self,index):
         box_index = int(self.particle_list[index])
         p_index = []
