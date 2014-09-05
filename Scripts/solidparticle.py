@@ -151,6 +151,7 @@ def crystal_size(L,num_frames,num_particles,rcut=15):
     ylabel = 'sigma'
     util.pickle_dump([num_crystal,max_crystal,second_crystal,third_crystal],'numsizes.pkl')
     pyplot.plot3(x,num_crystal,x,max_crystal,x,second_crystal,xlabel=xlabel,ylabel=ylabel,label1='num',label2='max',label3='second',showleg=True,save='crystal_sizes')
+
 def q6q4_map(VW,L,x,avg=1,step=5e4,rcut=30):
     Q4 = []
     Q6 = []
@@ -185,6 +186,7 @@ def q6q4_map(VW,L,x,avg=1,step=5e4,rcut=30):
             fid.write('%i %.8f %.8f\n'%(j,Q6[i][j],Q4[i][j]))
     fid.close()
     return Q4,Q6
+    
 def write_qmap_xyz(VW,L,x,Q6,Q4):
     fid = open('q6q4.xyz','w')
     bcc_cut = .05

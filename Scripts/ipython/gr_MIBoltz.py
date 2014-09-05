@@ -178,7 +178,7 @@ def potential_plots(ax1):
     # p=10.75
     # l_c = 1.42
     epsilon = 1.0 
-    sigma = 5+9
+    sigma = 16
     p=14
     n=12
     l_c = 1.42
@@ -188,7 +188,8 @@ def potential_plots(ax1):
          #V.append(  epsilon * ( 1 / (np.sinh((r_x/sigma))**p)))
          #V.append(epsilon*(sigma/(r_x-sigma/l_c))*np.exp(-(r_x/sigma)**p))
          #V.append(epsilon*(sigma/(r_x))**n*np.exp(-(r_x/sigma)**p))
-         V.append(epsilon*(sigma/(r_x))**n + math.log(r_x/sigma))
+         #V.append(epsilon*(sigma/(r_x))**n + math.log(r_x/sigma))
+         V.append(-epsilon*5/18.*(30**(3/2.))*(math.log(r_x/sigma)))
          #V.append(epsilon*np.exp(-(r_x/sigma)**p))
          #V.append(epsilon*np.exp(-((r_x/sigma)**2)))
          #V.append(  epsilon * ( (sigma / r)**12))

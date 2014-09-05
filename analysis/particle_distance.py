@@ -5,6 +5,8 @@
 # particles
 
 import numpy as np
+import MD
+import MD.base.points as points
 
 # \brief find the distances between Points in Two arrarys arrays must have same
 # elements 
@@ -69,7 +71,7 @@ def min_point_distance(P,B,L):
     small = 100
     index = 0
     for i in range(B.shape[0]):
-        d = dist(P,B[i],L)
+        d = points.dist(P,B[i],L)
         if d[0] < small:
             small = d[0]
             vector = d[1] 

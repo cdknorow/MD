@@ -83,6 +83,27 @@ def potential_mean_field(ax1, title, xmin=0,xmax=8,delta=1):
         rmax=17
         zero_cut = 15
         bin_num=50
+    #Carb-Thiol
+    if xmax == 20:
+        rmin=14.5
+        rmax=19
+        zero_cut = 15
+        bin_num=50
+    if xmax == 21:
+        rmin=17.5
+        rmax=24
+        zero_cut = 15
+        bin_num=50
+    if xmax == 22:
+        rmin=19
+        rmax=26
+        zero_cut = 15
+        bin_num=50
+    if xmax == 23:
+        rmin=20.5
+        rmax=28
+        zero_cut = 15
+        bin_num=50
     hpy = h5py.File('pmf_dist.hdf5','r')
     for K in sorted(hpy.keys(),key=float):
         if counter in choose:

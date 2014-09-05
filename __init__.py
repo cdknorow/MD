@@ -43,16 +43,6 @@ from util import readdcd
 import os
 
 if __name__ == '__main_':
-    #dirname = os.getcwd().partition('/')[-1]
-    #print "Starting:",dirname.split('/')[-1]
-    #var = util.get_path_variables()
-    #D = readdcd.DCD('dna.dcd')
-    #last = D.numframes
-    #L = D.box_length
-    #M = ReadCord()
-    #V = M.cord_auto(['V'])
-    #W = M.cord_auto(['W'])
-    #VW = M.cord_auto(['V','W'])
     print 'variables  can be loaded by'
     print 'V = M.cord_auto(["V"])'
     print 'VW = M.cord_auto(["V","W"])'

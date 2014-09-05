@@ -114,10 +114,10 @@ def get_crystals():
     try:
         VW = util.pickle_load('VW.pkl')
     except:
-         VW=M.cord_auto(['V','W'])
+         VW=M.cord_auto(['V','W','A0','A1'])
          util.pickle_dump(VW,'VW.pkl')
     #######################################
-    delta = 5
+    delta = 1
     x = range(0,last-2*delta,delta)
     C = np.zeros((len(x),VW.shape[1]),dtype=int)
     os.mkdir('imd_trajectory')
@@ -140,21 +140,21 @@ def get_crystals():
 
 
 #For multiple directories
-if __name__ == '__main__':
-    y = []
-    [y.append(x[0]) for x in os.walk(os.getcwd())]
-    del y[0]
-    for i in y:
-        print i.split('/')[-1]
-    for directory in y:
-        if os.path.isdir(directory):
-            os.chdir(directory)
-            try:
-                get_crystals()
-            except:
-                'directory failed',directory
-                pass
-            print '##\nfinished with:',directory
+# if __name__ == '__main__':
+#     y = []
+#     [y.append(x[0]) for x in os.walk(os.getcwd())]
+#     del y[0]
+#     for i in y:
+#         print i.split('/')[-1]
+#     for directory in y:
+#         if os.path.isdir(directory):
+#             os.chdir(directory)
+#             try:
+#                 get_crystals()
+#             except:
+#                 'directory failed',directory
+#                 pass
+#             print '##\nfinished with:',directory
 
 if __name__ == '__main__':
     get_crystals()

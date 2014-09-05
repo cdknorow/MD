@@ -24,6 +24,7 @@ if __name__ == '__main__':
             epsilon=1
             p=9.49
             l_c=1.28
+            label = 'sp4'
         if file_potential[:3] == 'sp8':
             xmin=15
             cut=13.5
@@ -31,6 +32,7 @@ if __name__ == '__main__':
             epsilon=1
             p=10
             l_c=1.2
+            label = 'sp8'
         if file_potential[:4] == 'sp12':
             cut=15.5
             xmin=20
@@ -38,7 +40,7 @@ if __name__ == '__main__':
             epsilon=1
             p=10.7
             l_c=1.45
-            #peos.Soft_Potential_plot(ax1,sigma,p,epsilon,l_c)
+            label = 'sp12'
         for line in fid.readlines():
             if line[0] != '#':
                 x = float(line.split()[0])
@@ -47,13 +49,19 @@ if __name__ == '__main__':
                     V.append(float(line.split()[1]))
                     F.append(float(line.split()[2]))
         fid.close()
-        #peos.rexp_Potential_fit(ax1,np.array(r),np.array(V),sigma,p,epsilon,l_c,xmin)
-        ax1.plot(r,V,'-',label="pmf")
-    #ax1.set_yscale('log')
+        ax1.plot(r,V,'-',label=label)
+    ax1.set_yscale('log')
     #ax1.set_xscale('log')
     ax1.set_ylim((.01,50))
     ax1.set_xlim((6,17))
     #plt.legend(loc=1)
     ax1.set_xlabel('r')
     ax1.set_ylabel('U(r)')
+    epsilon = 1.0 
+    sigma = 18
+    V=[]
+    for r_x in r:
+         V.append(-epsilon*5/18.*(30**(3/2.))*(math.log(r_x/sigma)))
+    ax1.plot(r,V,label='-log(r/sigma)')
+    plt.legend(loc=3)
     plt.show()

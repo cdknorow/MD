@@ -2,7 +2,6 @@
 import sys
 import os
 sys.path.append('/home/cdknorow/Dropbox/Software/')
-sys.path.append('/home/cdknorow/Dropbox/Software/MD')
 import numpy as np
 import math
 import matplotlib.pyplot as plt
@@ -124,11 +123,14 @@ def structure_factor(VW, L, n_frames=10, n_start=1,
             pickle.dump(crystal[0],open('qlattice.pkl','w'))
     return crystal[0]
 #Find the gaussian distribution around the ideal lattice sites
-def gaussian(VW,crystal,L,frames): #get nearest neighbor distance to point d_x = []
+def gaussian(VW,crystal,L,frames,step): #get nearest neighbor distance to point d_x = []
+    print step
     d_y = []
     d_z = []
     d_x = []
     index = []
+    delta = .01
+    minbin = 50
     for i in VW[frames[0]]:
         index.append(min_point_distance(i,crystal,L)[2])
     for k in frames:
@@ -137,17 +139,15 @@ def gaussian(VW,crystal,L,frames): #get nearest neighbor distance to point d_x =
             d_x.append(dist[0])
             d_y.append(dist[1])
             d_z.append(dist[2])
-    cont = True
-    while cont == True:
-        delta = float(raw_input("delta = "))
-        minbin = float(raw_input("bin = "))
-        bins = np.arange(-minbin,minbin+delta,delta)
-        bin_x, hist_x, max_hist = histogram_normal(d_x,bins)
-        bin_y, hist_y, max_hist = histogram_normal(d_y,bins)
-        bin_z, hist_z, max_hist = histogram_normal(d_z,bins)
-        pickle.dump([[bin_x,hist_x],[bin_y,hist_y],[bin_z,hist_z]],open('gaussian.pkl','w'))
-        if raw_input('rebin y/N') != 'y':
-            cont = False
+    #cont = True
+    #while cont == True:
+        #delta = float(raw_input("delta = "))
+        #minbin = float(raw_input("bin = "))
+    bins = np.arange(-minbin,minbin+delta,delta)
+    bin_x, hist_x, max_hist = histogram_normal(d_x,bins)
+    bin_y, hist_y, max_hist = histogram_normal(d_y,bins)
+    bin_z, hist_z, max_hist = histogram_normal(d_z,bins)
+    pickle.dump([[bin_x,hist_x],[bin_y,hist_y],[bin_z,hist_z]],open('gaussian%i.pkl'%step,'w'))
 
 
 #################################################
@@ -174,16 +174,21 @@ def run_():
         #V=M.cord_auto(['V','W'])
         V=M.cord_auto(['V'])
         if V.shape[1] < 1:
-            V=M.cord_auto(['A'])
+            V=M.cord_auto(['A0','A1','A'])
         V = drift_remove(V,L)
         util.pickle_dump(V,'V.pkl')
     x = [-30]
+    print 'getting lattice'
     for i in x:
         crystal = structure_factor(V, L_cont, n_start=i,save='sf'+str(i),
                 n_frames = 20,l=20, filters=0.005)
-    x = range(-40,-1)
     print 'finding gaussian'
-    gaussian(V,crystal,L,x)
+
+    delta = int(raw_input('delta ='))
+    r = last / delta
+    for i in range(0,last-(r-1),r):
+        x = range(i,i+r)
+        gaussian(V,crystal,L,x,step=i)
 
 ###for single directories
 if __name__ == '__main__':
