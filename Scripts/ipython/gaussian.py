@@ -32,41 +32,47 @@ def function(ax1, xmax=-1, time_scale=1, title='', binsize=.05):
         f_list.extend(filter(lambda x: x.split('.')[0].split('n')[1] == i, f))
     print f_list
     for pik in f_list:
+        print pik
         M = pickle.load(open(pik,'r'))
-        def shift(M,x,move):
-            s = M.argmax()
-            delta = s-len(x)/2
+        def shift(M,x,move,not_r=True):
+            binsize = x[1]-x[0]
+            s = np.argmax(M)
+            delta = s-len(x)/2.
             #shift x array by delta
-            if delta < 0:
-                x = x+binsize*abs(delta)
-            if delta > 0:
-                x = x-binsize*delta
-            return x+move
-        M[0][1] = shift(M[0][0],M[0][1],counter*.2)
-        M[1][1] = shift(M[1][0],M[1][1],counter*.2)
-        M[2][1] = shift(M[2][0],M[2][1],counter*.2)
+            if not_r:
+                return np.where(delta < 0, x+binsize*abs(delta), x-binsize*delta)+move
+            else:
+                return x+move
+
+
+        M[0][0] = shift(M[0][1],M[0][0],counter*.2)
+        M[1][0] = shift(M[1][1],M[1][0],counter*.2)
+        M[2][0] = shift(M[2][1],M[2][0],counter*.2)
+        M[3][0] = shift(M[3][1],M[3][0],counter*.2,not_r=False)
+
 
         #expectation value of x
-        def expectation(f,x,binsize):
-            expx = 0
-            expx2 = 0
-            for i in range(f.shape[0]):
-                expx += x[i]*f[i]**2*binsize
-            for i in range(f.shape[0]):
-                expx2 += x[i]**2*f[i]**2*binsize
-            return expx, expx2, expx2 - expx**2
+        #def expectation(f,x,binsize):
+        #    expx = 0
+        #    expx2 = 0
+        #    for i in range(f.shape[0]):
+        #        expx += x[i]*f[i]**2*binsize
+        #    for i in range(f.shape[0]):
+        #        expx2 += x[i]**2*f[i]**2*binsize
+        #    return expx, expx2, expx2 - expx**2
 
         #print 'expecation value <x>, <x^2>, sigma^2'
         #print 'x', expectation(M[0][0],M[0][1],binsize)
         #print 'y', expectation(M[1][0],M[1][1],binsize)
         #print 'z', expectation(M[2][0],M[2][1],binsize)
 
-        ax1.plot(M[0][1][:xmax],M[0][0][:xmax],'r', lw=3, label = 'x')
-        ax1.plot(M[1][1][:xmax],M[1][0][:xmax],'g', lw=3, label = 'y')
-        ax1.plot(M[2][1][:xmax],M[2][0][:xmax],'b', lw=3, label = 'z')
+        ax1.plot(M[0][0][:xmax],M[0][1][:xmax],'r', lw=1.5, label = 'x')
+        ax1.plot(M[1][0][:xmax],M[1][1][:xmax],'g', lw=1.5, label = 'y')
+        ax1.plot(M[2][0][:xmax],M[2][1][:xmax],'b', lw=1.5, label = 'z')
+        ax1.plot(M[3][0][:xmax],M[3][1][:xmax],'k', lw=1.5, label = 'r')
         #ax1.set_xlim((M[0][1][-xmax],M[0][1][xmax]))
         counter+=1
-    ax1.set_xlim((-.5,.5+(counter*.2)))
+    ax1.set_xlim((-.1,.1+(counter*.15)))
     #ax1.set_ylim((0,.06))
     ax1.set_xlabel(r'$\sigma$')
     ax1.set_ylabel('count')

@@ -18,7 +18,7 @@ from MD.base.points import vector
 # \returns index of nearest neighbors
 # \returns vectors to nearest neighbors
 #
-# \param M Numpy matrix of [frames][particles][x,y,z]
+# \param M Numpy matrix of [particles][x,y,z]
 # \param index index of particle to find nearest neighbors of
 # \param L length of box correspodning to periodic boundaries
 # \param rcut cutoff distance for nearest neighbor search
@@ -27,16 +27,19 @@ from MD.base.points import vector
 # rcut will be set to a default.
 #
 #
-def nearest_neighbors_index(M,index,L,rcut=20):
-    neighbors = []
-    vectors = []
-    for i in range(M.shape[0]):
-        if dist(M[i],M[index],L)[0] <= rcut and i!=index:
-            neighbors.append(i)
-    vectors = vector(M[index],M[neighbors],L)
-    if neighbors == []:
-        print "error No neighbors were found try reducing rcut"
-    return neighbors, vectors
+def nearest_neighbors_index(M,index,L,rcut=20, vectors = False):
+    if vectors:
+        r = M - M[index]
+        r = np.where(r > L[0]/2, r - L[0], r)
+        r = np.where(r < -L[0]/2, r + L[0], r)
+        d = np.sqrt((r**2).sum(axis=-1))
+        return np.argwhere(d < rcut)[1:].tolist(), r[np.argwhere(d < rcut)[1:]]
+    else:
+        r = np.abs(M - M[index])
+        r = np.where(r > L[0]/2, L[0] - r, r)
+        d = np.sqrt((r**2).sum(axis=-1))
+        return np.argwhere(d < rcut)[1:].tolist()
+
 
 ## \brief Finds x number of neighbors to single particle.
 # 
@@ -51,51 +54,23 @@ def nearest_neighbors_index(M,index,L,rcut=20):
 # To calculated the nearest neighbors M, index, and L must be specified
 # rcut will be set to a default.
 #
-#
-def count_neighbors_index(M,index,L,count=8,rcut=20):
-    neighbors = []
-    D = []
-    N = []
-    for i in range(M.shape[0]):
-        N.append([dist(M[i],M[index],L)[0],i])
-        d= dist(M[i],M[index],L)[0]
-    N.sort()
-    for i in range(1,count+1):
-        if N[i][0]<rcut:
-            neighbors.append(N[i][1])
-    vectors = vector(M[index],M[neighbors],L)
 
-    #print 'Max,Min,Average'
-    #print max(D),min(D),max(D)/len(D)
+def count_neighbors_index(M,index,L,count=8,rcut=20, vectors = False):
+    if vectors:
+        r = M - M[index]
+        r = np.where(r > L[0]/2, r - L[0] , r)
+        r = np.where(r < -L[0]/2, r + L[0], r)
+        d = np.sqrt((r**2).sum(axis=-1))
+        b = filter(lambda x: d[x] < rcut,d.argsort()[1:count+1] ) 
+        return b , r[b]
+    else:
+        r = np.abs(M - M[index])
+        r = np.where(r > L[0]/2, L[0] - r, r)
+        d = np.sqrt((r**2).sum(axis=-1))
+        b = filter(lambda x: d[x] < rcut,d.argsort()[1:count+1] )
+        return b
 
-    return neighbors,vectors
 
-## \brief Finds x number of neighbors to single particle an returns distances.
-# 
-# \returns distances to nearest neighbors
-#
-# \param M Numpy matrix of [frames][particles][x,y,z]
-# \param index index of particle to find nearest neighbors of
-# \param L length of box correspodning to periodic boundaries
-# \param count number of neighbors to find
-#
-# To calculated the nearest neighbors M, index, and L must be specified
-# rcut will be set to a default.
-#
-#
-def count_neighbors_distance(M,index,L,count=8,rcut=20):
-    neighbors = []
-    D = []
-    N = []
-    for i in range(M.shape[0]):
-        N.append([dist(M[i],M[index],L)[0],i])
-        d = dist(M[i],M[index],L)[0]
-    N.sort()
-    for i in range(1,count+1):
-        if N[i][0]<rcut:
-            neighbors.append(N[i][0])
-
-    return neighbors
 ## \brief finds the nearest neighbors to a point x,y,z
 # 
 # \returns index of nearest neighbors
@@ -111,16 +86,13 @@ def count_neighbors_distance(M,index,L,count=8,rcut=20):
 #
 #
 def nearest_neighbors_point(M,point,L,rcut=20):
-    neighbors = []
-    vectors = []
-    for i in range(M.shape[0]):
-        if (dist(M[i],point,L)[0] <= rcut
-        and np.array_equal(point,M[i])==False):
-            neighbors.append(i)
-    vectors = vector(point,M[neighbors],L)
-    if neighbors == []:
-        print "error No neighbors were found try increasing"
-    return neighbors, vectors
+    r = np.abs(M - point)
+    r = np.where(r > L[0]/2, L[0] - r, r)
+    d = np.sqrt((r**2).sum(axis=-1))
+    if vectors:
+        return np.argwhere(d < rcut)[1:], r[np.argwhere(d < rcut)[1:]]
+    return np.argwhere(d < rcut)[1:]
+
 
 ## \brief finds the closest neighbor to a point x,y,z
 # 
@@ -190,137 +162,3 @@ def min_distance(A1,A2,L):
                 side2 = j
     return side1,side2
 
-## \brief Calculates the second nearest neighbors to single particle.
-# 
-# \returns index of nearest neighbors
-# \returns vectors to nearest neighbors
-#
-# \param M Numpy matrix of [frames][particles][x,y,z]
-# \param index index of particle to find nearest neighbors of
-# \param L length of box correspodning to periodic boundaries
-# \param rcut cutoff distance for nearest neighbor search
-#
-# To calculated the nearest neighbors M, index, and L must be specified
-# rcut will be set to a default.
-#
-#
-def second_nearest_neighbors_index(M,index,L,inrcut=20, outrcut=40):
-    neighbors = []
-    vectors = []
-    for i in range(M.shape[0]):
-        d = dist(M[i],M[index],L)[0] 
-        if (d <= outrcut and  i != index and d <= inrcut):
-            neighbors.append(i)
-    vectors = vector(M[index],M[neighbors],L)
-    if neighbors == []:
-        print "error No neighbors were found try reducing rcut"
-    return neighbors, vectors
-
-## \brief finds the closest neighbors to a point x,y,z
-# 
-# \returns index of nearest neighbor
-# \returns distance to nearest neighbor
-#
-# \param M Numpy matrix of [frames][particles][x,y,z]
-# \param point [x,y,z] point to find neihbors of
-# \param L length of box correspodning to periodic boundaries
-#
-def ws_neighbors_point(M,point,L,index,rmin=6,rmax=10):
-    neighbors_in = []
-    neighbors_out = []
-    for i in range(M.shape[0]):
-        if dist(M[i],point,L)[0] <= rmin:
-            neighbors_in.append(i)
-        if dist(M[i],point,L)[0] <= rmax:
-            neighbors_out.append(i)
-    #if len(neighbors_in) != len(neighbors_out):
-    #    print 'neighbors not equal', index
-    #    print neighbors_in
-    #    print neighbors_out
-    #if len(neighbors_out) == 2:
-    #    print 'possible intersticial', index
-    return neighbors_in, neighbors_out
-
-## \brief finds num neighbors to a point x,y,z within rcut
-# 
-# \returns index of nearest neighbor
-# \returns distance to nearest neighbor
-#
-# \param M Numpy matrix of [frames][particles][x,y,z]
-# \param point [x,y,z] point to find neihbors of
-# \param L length of box correspodning to periodic boundaries
-#
-def rcut_neighbors_point(M,point,L,rcut=10):
-    neighbors = []
-    for i in range(M.shape[0]):
-        p = dist(M[i],point,L)[0]
-        if dist(M[i],point,L)[0] <= rcut :
-            neighbors.append(i)
-    if abs(point[0]) < 15 and abs(point[1]) < 15 and abs(point[2]) < 15:
-        if len(neighbors) > 0:
-            return len(neighbors)
-        else:
-            return 0
-    if len(neighbors) > 0:
-        return len(neighbors)
-    return 0
-
-## \brief Calculates the nearest neighbors to single particle.
-#   uses a sorted list of close particles to increase speed
-# 
-# \returns index of nearest neighbors
-# \returns vectors to nearest neighbors
-#
-# \param M Numpy matrix of [frames][particles][x,y,z]
-# \param index index of particle to find nearest neighbors of
-# \param otree sorted list of nearest neighbor bins
-# \param index index of particle to find nearest neighbors of
-# \param L length of box correspodning to periodic boundaries
-# \param rcut cutoff distance for nearest neighbor search
-#
-# To calculated the nearest neighbors M, index, and L must be specified
-# rcut will be set to a default.
-#
-#
-def nn_tree_index(M,index,otree,L,rcut=20):
-    n_list = otree.get_particle_neighbors(index)
-    neighbors = []
-    vectors = []
-    for i in n_list:
-        if dist(M[i],M[index],L)[0] <= rcut and i!=index:
-            neighbors.append(i)
-    vectors = vector(M[index],M[neighbors],L)
-    if neighbors == []:
-        print "error No neighbors were found try reducing rcut"
-    return neighbors, vectors
-
-## \brief Finds x number of neighbors to single particle.
-# 
-# \returns index of nearest neighbors
-# \returns vectors to nearest neighbors
-#
-# \param M Numpy matrix of [frames][particles][x,y,z]
-# \param index index of particle to find nearest neighbors of
-# \param L length of box correspodning to periodic boundaries
-# \param count number of neighbors to find
-#
-# To calculated the nearest neighbors M, index, and L must be specified
-# rcut will be set to a default.
-#
-#
-def cn_tree_index(M,index,otree,L,count=8,rcut=20):
-    n_list = otree.get_particle_neighbors(index)
-    neighbors = []
-    D = []
-    N = []
-    for i in n_list:
-        N.append([dist(M[i],M[index],L)[0],i])
-        d= dist(M[i],M[index],L)[0]
-    N.sort()
-    for i in range(1,count+1):
-        if N[i][0]<=rcut:
-            neighbors.append(N[i][1])
-    vectors = vector(M[index],M[neighbors],L)
-
-
-    return neighbors,vectors

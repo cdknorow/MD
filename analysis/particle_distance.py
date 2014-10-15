@@ -68,16 +68,11 @@ def min_particle_distance(A,B,L,cut=10,verbose=False):
 # \param B matrix of B points for a B[atoms][x,y,z]
 # \param L lenght of box 
 def min_point_distance(P,B,L):
-    small = 100
-    index = 0
-    for i in range(B.shape[0]):
-        d = points.dist(P,B[i],L)
-        if d[0] < small:
-            small = d[0]
-            vector = d[1] 
-            index = i
-    return small,vector,index
-
+    r = np.abs(P - B)
+    r = np.where(r > L[0]/2, L[0] - r, r)
+    d = np.sqrt((r**2).sum(axis=-1))
+    index = np.argmin(d)
+    return d[index],index
 
 if __name__ == '__main__':
     A = np.zeros((1,5,3))

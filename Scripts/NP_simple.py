@@ -206,6 +206,7 @@ def PMF(hpy, V,L,n_frames=15,n_start=1,end=1):
     time_start = time.clock()
     dset = hpy.create_dataset("%i"%n_start, data = np.array(distance))
     dset.attrs.create("N_atoms",V.shape[1])
+    dset.attrs.create("V",L[0]*L[1]*L[2])
     dset.attrs.create("L",L[0])
     dset.attrs.create("n_frames",n_frames)
 
@@ -401,36 +402,22 @@ def run_():
         #util.pickle_dump(Z,'Z.pkl')
     # if (os.path.isfile('msd.pkl') is False):
     #    msd(V,L)
+    print V
+    asdf
     x, xcount = util.get_box_size_steps(L_cont)
     print x
-    print 'asdffffffffffff'
     x_set = []
     n_frames = []
     print xcount
     print x
+    #F = filter(lambda x: x > 10, xcount)
     for i in range(len(xcount)):
         if xcount[i] > 10:
             x_set.append(x[i])
             n_frames.append(xcount[i]-10)
-    print 'asdffffffffffff'
     print n_frames
     print x_set
-    #get the frame to start based on rho
-    #for i in range(len(x)):
-    #    rho =  V.shape[1]/L_cont[x[i]][0]**3
-    #    if abs(rho-1.2)< .1 and x_count[i] > 5:
-    #        print rho
-    #        delta = 5
-    #        x_set = [x[i]+delta]
-    #        x_index = i
-    #sp4
-    #x_set = [21, 42,62,83, 103, 123, 144, 164, 184, 204]
-    #sp8
-    #x_set = [22,42,62,83,103,123]
-    #x_set = [450,820,1240,2050,2445,2862,3268,3674,4080,
-    #         4486,4892,5298,5704,6110] 
-    #x_set = [400,840,1260,1640,2050,2460]
-    #if os.path.isfile('../pmf_dist.hdf5') != True:
+
     f = h5py.File('../pmf_dist.hdf5','w')
     for j,i in enumerate(x_set):
         if  i + n_frames[j] <= V.shape[0]:
@@ -503,15 +490,16 @@ def run_():
 #                    pass
 #                print '##\nfinished with:',directory
 #For multiple directories
-if __name__ == '__main__':
-   for f in sorted(os.listdir(os.getcwd())):
-       if os.path.isdir(f):
-           os.chdir(f)
-           os.chdir('V')
-           run_()
-           print '##\nfinished with:',f
-           os.chdir('../../')
-###for single directories
 #if __name__ == '__main__':
-#        run_()
+#    for f in sorted(os.listdir(os.getcwd())):
+#        if os.path.isdir(f):
+#            print f
+#            os.chdir(f)
+#            os.chdir('V')
+#            run_()
+#            print '##\nfinished with:',f
+#            os.chdir('../../')
+###for single directories
+if __name__ == '__main__':
+        run_()
 

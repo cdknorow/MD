@@ -2,15 +2,12 @@
 # \brief methods for local bond ordering of a group of particles in
 # simulation.
 #
-#
-
 import numpy as np
 from MD.base.spherical import xyz_to_spherical,qlm,ql,Sij
-from MD.analysis.nearest_neighbor import count_neighbors_index
-from MD.analysis.nearest_neighbor import cn_tree_index
-from MD.base.octree import node
+import MD.analysis.nearest_neighbor as nn
+reload(nn)
 
-## \brief Uses spherical harmonics to identify particle type.
+## \brief generate the average bond order parameter
 #
 # \return num number of solid particles in group of particles
 #
@@ -31,7 +28,7 @@ def Qmap(M,L,count=14,l=6,crystal=6,verbose=False,rcut=30):
     print 'getting neighbors'
     for i in range(M.shape[0]):
         #N = cn_tree_index(M,i,otree,L,count=count,rcut=rcut)
-        N = count_neighbors_index(M,i,L,count=count,rcut=rcut)
+        N = nn.count_neighbors_index(M,i,L,count=count,rcut=rcut,vectors=True)
         neighbors.append([N[0],xyz_to_spherical(N[1])])
         #include itself
         neighbors[-1][0].append(i)
@@ -59,7 +56,8 @@ def Qmap(M,L,count=14,l=6,crystal=6,verbose=False,rcut=30):
         Ql[i]=ql(qlm_avg,l)
     print 'Ql=',l,Ql.sum()/Ql.shape[0]
     return Ql
-## \brief Uses spherical harmonics to identify particle type.
+
+## \brief Generte the average bond order parameters for q6 and q4.
 #
 # \return num number of solid particles in group of particles
 #
@@ -68,22 +66,18 @@ def Qmap(M,L,count=14,l=6,crystal=6,verbose=False,rcut=30):
 # \param r_cut cutoff for neighbor search
 # \param l bond order,6 for bcc, 4 for simple cubic 
 #############################
-def QmapFast(M,L,count=14,crystal=6,verbose=False,rcut=30):
+def Qmapq6q4(M,L,count=14,crystal=6,verbose=False,rcut=30):
     #Find nearest neighbors for all particles and convert to spherical
     #######
     #neighbors[i][0]=index of neighbors
     #neighbors[i][1]=array[i][x,y,z] of distance between neighbors
     ########
     neighbors=[]
-    #otree = node(L,delta=(M.shape[0]/2)**0.333)
-    #otree.add_particles(M)
     print 'getting neighbors'
     for i in range(M.shape[0]):
-        #N = cn_tree_index(M,i,otree,L,count=count,rcut=rcut)
-        N = count_neighbors_index(M,i,L,count=count,rcut=rcut)
+        N = nn.count_neighbors_index(M,i,L,count=count, rcut=rcut,vectors=True)
         if len(N[0]) != count:
             print 'lenght of N', len(N[0])
-
         neighbors.append([N[0],xyz_to_spherical(N[1])])
         #include itself
         neighbors[-1][0].append(i)
@@ -110,7 +104,7 @@ def QmapFast(M,L,count=14,crystal=6,verbose=False,rcut=30):
                 qlm_avg[m+l] += qlm_matrix[k,m+l]
             qlm_avg[m+l]/=len(neighbors[i][0])
         Ql4[i]=ql(qlm_avg,l)
-    print 'Ql4=',l,Ql4.sum()/Ql4.shape[0]
+    print 'Ql4_avg=',l,Ql4.sum()/Ql4.shape[0]
     Ql6=np.zeros((M.shape[0]),dtype=complex)
     l=6
     qlm_matrix=np.zeros((M.shape[0],2*l+1),dtype=complex)
@@ -124,11 +118,11 @@ def QmapFast(M,L,count=14,crystal=6,verbose=False,rcut=30):
                 qlm_avg[m+l]+=qlm_matrix[k,m+l]
             qlm_avg[m+l]/=len(neighbors[i][0])
         Ql6[i]=ql(qlm_avg,l)
-    print 'Ql6=',l,Ql6.sum()/Ql6.shape[0]
+    print 'Ql6_avg=',l,Ql6.sum()/Ql6.shape[0]
     return Ql4,Ql6
 
+
 ## \brief Uses spherical harmonics to identify solid particles 
-# a specfic frame.
 #
 # \return num number of solid particles in group of particles
 #
@@ -145,10 +139,8 @@ def solid_particles(M,L,count=14,l=6,c_cut=0.15,crystal=6,verbose=False,rcut=30)
     #neighbors[i][1]=array[i][x,y,z] of distance between neighbors
     ########
     neighbors=[]
-    otree = node(L,delta=(M.shape[0]/2)**0.333)
-    otree.add_particles(M)
     for i in range(M.shape[0]):
-        N = cn_tree_index(M,i,otree,L,count=count,rcut=rcut)
+        N = nn.count_neighbors_index(M,i,L,count=count,rcut=rcut, vectors=True)
         neighbors.append([N[0],xyz_to_spherical(N[1])])
         if verbose:
             print 'neighbors',len(N[0])
@@ -193,6 +185,7 @@ def solid_particles(M,L,count=14,l=6,c_cut=0.15,crystal=6,verbose=False,rcut=30)
     print 'crystals',num
     return num, iscrystal
 
+
 ## \brief Calculates Steihardt order parameters  
 #
 # \return num steihard order parameter for particles
@@ -212,11 +205,10 @@ def steinhardt_order(M,L,l=6,rcut=17.5,count=14,verbose=False):
     #neighbors[i][1]=array[i][x,y,z] of distance between neighbors
     ########
     neighbors=[]
-    otree = node(L,delta=(M.shape[0]/2)**0.333)
-    otree.add_particles(M)
     for i in range(M.shape[0]):
-        #N = cn_tree_index(M,i,otree,L,count=count,rcut=rcut)
-        N = count_neighbors_index(M,i,L,count=count,rcut=rcut)
+        N = nn.count_neighbors_index(M,i,L,count=count,rcut=rcut,vectors=True)
+        if i == 0:
+            print i, N[1]
         neighbors.append([N[0],xyz_to_spherical(N[1])])
         if verbose:
             print 'neighbors',len(N[0])

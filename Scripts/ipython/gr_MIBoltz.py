@@ -177,19 +177,24 @@ def potential_plots(ax1):
     # sigma = 5+7.
     # p=10.75
     # l_c = 1.42
-    epsilon = 1.0 
-    sigma = 16
-    p=14
-    n=12
-    l_c = 1.42
+    #Grafted Polymer sp=12
+    epsilon = 160.0 
+    sigma = 17.
+    p=10
+    n=10
+    l_c = 1.55
 
     V=[]
     for r_x in r:
          #V.append(  epsilon * ( 1 / (np.sinh((r_x/sigma))**p)))
          #V.append(epsilon*(sigma/(r_x-sigma/l_c))*np.exp(-(r_x/sigma)**p))
+         if r_x < sigma:
+             V.append(epsilon*(1-r_x/sigma)**(5/2.))
+         else:
+             V.append(0)
          #V.append(epsilon*(sigma/(r_x))**n*np.exp(-(r_x/sigma)**p))
          #V.append(epsilon*(sigma/(r_x))**n + math.log(r_x/sigma))
-         V.append(-epsilon*5/18.*(30**(3/2.))*(math.log(r_x/sigma)))
+         #V.append(-epsilon*5/18.*(30**(3/2.))*(math.log(r_x/sigma)))
          #V.append(epsilon*np.exp(-(r_x/sigma)**p))
          #V.append(epsilon*np.exp(-((r_x/sigma)**2)))
          #V.append(  epsilon * ( (sigma / r)**12))

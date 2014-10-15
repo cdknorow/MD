@@ -159,7 +159,7 @@ def dist(p1,p2,L):
     d[2]=apply_boundary(d[2],L[2])
     #distance scalar
     distance = sqrt(np.dot(d,d))
-    return distance,d
+    return distance,np.array(d)
 ## \internal
 # \brief midpoint between two points where p1 is the origin 
 #

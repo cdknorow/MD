@@ -12,7 +12,7 @@ reload(peos)
 matplotlib.rc('font', **{'size':'14'})
 counter = 0
 colors = ['r','g','b','k','y','c','m']
-choose = range(20)
+choose = [1,2,3,4]
 
 def Smooth(M):
     #Find the max
@@ -44,6 +44,7 @@ def radial_plots(ax1, ax2, ax3):
     dr = r[1]-r[0]
     hist_total = np.zeros(r.shape)
     count = 0
+    counter = 0
 
     for K in sorted(hpy.keys()):
         if counter in choose:
@@ -71,6 +72,8 @@ def radial_plots(ax1, ax2, ax3):
             if 'c2sp' in K:
                 ax1.plot(r,Smooth(hist)/A,'')
                 ax1.set_ylabel('c2sp')
+        if 'ps2pe' in K:
+            counter+=1
     N = np.sum(hist_total)
     for i in range(hist_total.shape[0]):
         hist_total[i] = hist_total[i] / (count*num_frames*N*(4*math.pi*dr*r[i]**2))

@@ -86,12 +86,12 @@ def potential_mean_field(ax1, title, xmin=0,xmax=8,delta=1):
     #Carb-Thiol
     if xmax == 20:
         rmin=14.5
-        rmax=19
+        rmax=18.0
         zero_cut = 15
         bin_num=50
     if xmax == 21:
         rmin=17.5
-        rmax=24
+        rmax=22
         zero_cut = 15
         bin_num=50
     if xmax == 22:
@@ -102,6 +102,21 @@ def potential_mean_field(ax1, title, xmin=0,xmax=8,delta=1):
     if xmax == 23:
         rmin=20.5
         rmax=28
+        zero_cut = 15
+        bin_num=50
+    if xmax == 24:
+        rmin=17
+        rmax=28
+        zero_cut = 15
+        bin_num=50
+    if xmax == 25:
+        rmin=20
+        rmax=28
+        zero_cut = 15
+        bin_num=50
+    if xmax == 26:
+        rmin=22.5
+        rmax=29
         zero_cut = 15
         bin_num=50
     hpy = h5py.File('pmf_dist.hdf5','r')
@@ -221,8 +236,8 @@ def full_potential_mean_field(ax1, title, xmin=0,xmax=8,delta=1):
 
             #smooth the histogram
             fid = open('full_hist_target%i.inp'%(count),'w')
-            fid.write('#rmin rmax bins L\n')
-            fid.write('#%.2f %2f %i %.4f\n'%(r[0],r[-1],bin_num,L))
+            fid.write('#rmin rmax bins L N\n')
+            fid.write('#%.2f %2f %i %.4f %ii\n'%(r[0],r[-1],bin_num,L,N))
             for i in r_linspace:
                 #interpolation might make negative numbers
                 if fhist(i) > 0.001:
@@ -275,6 +290,11 @@ if __name__ == "__main__":
             os.chdir(f)
             title = f.split('_')[0] 
             ax1,ax2 = get_plot()
+            if os.path.isfile('choose.txt'):
+                choose = []
+                fid = open('choose.txt','r')
+                for i in fid.readline().split():
+                    choose.append(int(i))
             potential_mean_field(ax1, title = title,xmin = int(config['-x']), xmax = int(config['-r']),
                     delta = int(config['-i']))
             counter=0

@@ -44,6 +44,7 @@ def drift_position(A,L):
         x_whole = x_sum / num + x_whole
         y_whole = y_sum / num + y_whole
         z_whole = z_sum / num + z_whole
+    print Dsum
     return  D, Dsum
 
 
